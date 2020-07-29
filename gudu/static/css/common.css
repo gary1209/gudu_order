@@ -1,0 +1,86 @@
+html{
+    font-size: 40px;
+}
+
+body{
+    background-color:white;
+}
+
+table{
+    font-size: 40px;
+}
+
+.table th, .table td{
+    vertical-align: middle;
+}
+
+img{
+    width: 50%;
+}
+
+a{
+    color:inherit;
+    text-decoration: none;
+}
+
+input[type=checkbox]{
+  /* Double-sized Checkboxes */
+  -ms-transform: scale(2); /* IE */
+  -moz-transform: scale(2); /* FF */
+  -webkit-transform: scale(2); /* Safari and Chrome */
+  -o-transform: scale(2); /* Opera */
+  padding: 10px;
+}
+
+.input-number{
+    width: 100px;
+}
+
+.btn{
+    /*font-size: 25px;*/
+}
+
+.flex{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-wrap: wrap;
+}
+
+.flex-item{
+    margin: 5px;
+    display: flex;
+    justify-content:center;
+    align-items: center;
+    border: none;
+}
+
+.strikethrough{
+    text-decoration: line-through;
+}
+
+.gray-bg{
+    background-color: #eee;
+}
+
+.product-row{
+    padding-top: 10px;
+}
+
+.remove-product{
+    padding: 0 10 0 10px;
+}
+
+.align-center{
+    justify-content: center;
+    align-items: center;
+    margin: 5px;
+}
+
+.mid-font{
+    font-size: 2rem;
+}
+
+.sm-font{
+    font-size: 1rem;
+}

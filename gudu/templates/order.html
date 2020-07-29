@@ -1,0 +1,99 @@
+{% extends 'product_pane_base.html' %}
+
+{% set add_cate = False %}
+{% set icon_row = False %}
+
+{% block title_block %}
+<div style="width: 100%; height: 100%;">
+    <div>
+        <img src="{{url_for('static', filename='img/logo.png')}}" style="width: 20%; float: left;" class="homepage_btn">
+        <div class="flex-item"> 
+            <div >桌號：</div>
+            
+            <select required>
+                <option selected="selected" disabled="true">選擇</option>
+                {% for d in desks %}
+                <option value="{{d.d_id}}">{{d.d_name}}</option>
+                {% endfor %}
+            </select>
+            <span class="btn" id="order">確認訂單</span>
+            <span class="btn" id="check_order">本桌已點訂單</span>
+        </div>
+    </div>
+{% endblock title_block %}
+
+{% block pane_content %}
+    <div class="flex" style="background-color: white;">
+        <div class="tab-content flex-item" style="display: inline-block;">
+            {% for c in categories %}
+                {% if loop.index == 1%}
+            <div class="tab-pane show active" id="content-{{c.id}}" role="tabpanel" aria-labelledby="tab-{{c.id}}">
+                {% else %}
+            <div class="tab-pane" id="content-{{c.id}}" role="tabpanel" aria-labelledby="tab-{{c.id}}">
+                {% endif %}
+
+                <table class="table table-borderless" style="text-align: center;">
+                    <tbody>
+                {% for p in categories[c] %}
+                        <tr data-pid="{{ p.p_id }}" data-pname="{{ p.p_name }}">
+                    {% if p.available == 1 %}
+                            <th scope="row">{{ p.p_name }}</th>
+                            <td>
+                                <button type="button" class="btn btn-danger btn-number" data-type="minus" data-field="quant[{{ p.p_id }}]">
+                                    <span class="fas fa-minus"></span>
+                                </button>
+                                <input type="text" name="quant[{{ p.p_id }}]" class="input-number" value="0" min="-100" max="100">
+                                <button type="button" class="btn btn-success btn-number" data-type="plus" data-field="quant[{{ p.p_id }}]">
+                                    <span class="fas fa-plus"></span>
+                                </button>
+                            </td>
+                    {% else %}
+                            <th scope="row" class="strikethrough">{{ p.p_name }}</th>
+                            <td>
+                                <button type="button" class="btn btn-danger btn-number disabled" disabled="disabled" data-type="minus" data-field="quant[{{ p.p_id }}]">
+                                    <span class="fas fa-minus"></span>
+                                </button>
+                                <input type="text" name="quant[{{ p.p_id }}]" class="input-number" value="0" min="-100" max="100">
+                                <button type="button" class="btn btn-success btn-number disabled" disabled="disabled" data-type="plus" data-field="quant[{{ p.p_id }}]">
+                                    <span class="fas fa-plus"></span>
+                                </button>
+                            </td>
+                    {% endif %}
+                        </tr>
+                {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" tabindex="-1" role="dialog" id="order_modal">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title row">
+                <span>桌號:</span>
+                <span id="order_d_name"></span>
+            </div>
+
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body"></div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="order-conf">送出</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var order_url = '{{ url_for("order.order") }}';
+    var check_order_url = '{{ url_for("order.check_desk_orders") }}';
+</script>
+<script src="{{url_for('static', filename='js/order.js') }}"></script>
+
+{% endblock pane_content%}

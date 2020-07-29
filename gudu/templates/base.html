@@ -1,0 +1,26 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Gudu-Order</title>
+  {% include "resource.html" %}
+
+  {% block head %}
+  {% endblock head %}
+</head>
+
+<body>
+  {% if icon_row %}
+  <div class="flex gray-bg">
+      <img src="{{url_for('static', filename='img/logo.png')}}" class="flex-item homepage_btn"style="width: 20%;">
+  </div>
+  {% endif %}
+  {% block content %}
+  {% endblock content%}
+
+  <script type="text/javascript">
+    $('.homepage_btn').on('click', function(){
+      window.location.href = '{{ url_for("index") }}';
+    })
+  </script>
+</body>
+</html>

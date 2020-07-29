@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/card.css')}}">
+{% endblock head %}
+
+{% block content %}
+<div style="width: 100%; height: 100%; padding-top: 5%">
+    <div class="flex">
+        {% for d in desks %}
+            <div class="mid-card flex-item table-card mid-font" data-did="{{ d.d_id }}">{{ d.d_name }}</div>
+        {% endfor %}
+    </div>
+</div>
+<script type="text/javascript">
+    $('.table-card').on('click', function () {
+        window.location = '{{ url_for("order.index") }}' + $(this).attr('data-did');
+    });
+
+</script>
+{% endblock content%}

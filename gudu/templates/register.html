@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% set disable_nav = True %}
+
+{% block head %}
+<link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/card.css')}}">
+{% endblock head %}
+
+{% block content %}
+<div style="width: 100%; height: 100%; padding-top: 5%">
+  <div class="flex">
+      <div class="card text-center flex form-group">
+          <div style="margin-bottom: 30px;">
+              <img src="{{url_for('static', filename='img/logo.png')}}">
+          </div>
+          <div>
+              <form method="POST">
+                  <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">
+                          <img src="{{url_for('static', filename='img/account.png')}}">
+                      </span>
+                    </div>
+                    <input type="text" name="username" class="form-control" placeholder="帳號" aria-label="Username" required>
+                  </div>
+                  <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">
+                          <img src="{{url_for('static', filename='img/password.png')}}">
+                      </span>
+                    </div>
+                    <input type="password" name="password" class="form-control" placeholder="密碼" aria-label="Password" required>
+                  </div>
+                  <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">
+                          <img src="{{url_for('static', filename='img/password.png')}}">
+                      </span>
+                    </div>
+                    <input type="password" id="password-conf" placeholder="確認密碼" aria-label="Password Confirm" required>
+                  </div>
+                  <button type="submit" value="sign up" class="btn btn-outline-secondary" style="width: 20%;">註冊</button>
+              </form>
+          </div>
+  </div>
+</div>
+{% endblock content%}

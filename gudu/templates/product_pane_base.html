@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/fontawesome/all.css')}}">
+{% endblock head %}
+
+{% block content %}
+    {% block title_block %}
+    {% endblock title_block %}
+
+    <ul class="nav nav-tabs nav-fill gray-bg" role="tablist" id="cate_tabs">
+        {% for c in categories %}
+        <li class="nav-item" role="presentation">
+            {% if loop.index == 1%}
+            <a class="nav-link active" id="tab-{{c.id}}" data-toggle="tab" href="#content-{{c.id}}" role="tab" aria-controls="content-{{c.id}}" aria-selected="true">{{ c.name }}</a>
+            {% else %}
+            <a class="nav-link" id="tab-{{c.id}}" data-toggle="tab" href="#content-{{c.id}}" role="tab" aria-controls="content-{{c.id}}" aria-selected="false">{{ c.name }}</a>
+            {% endif %}
+        </li>
+        {% endfor %}
+        {% if add_cate %}
+        <li class="nav-item">
+            <a class="nav-link" id="add-category"> <span class="fas fa-plus" style="line-height: unset;"></span></a>
+<!--             <button type="button" class="btn btn-success btn-number disabled" disabled="disabled" data-type="plus">
+                <span class="fas fa-plus"></span>
+            </button> -->
+        </li>
+        {% endif %}
+    </ul>
+
+    {% block pane_content %}
+    {% endblock pane_content %}
+{% endblock content%}

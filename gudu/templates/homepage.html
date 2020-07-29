@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="flex">
+    <div>
+        <div class="align-center"><a href="{{ url_for('order.order_page')}}">點餐</a></div>
+        {% if staff.is_superuser %}
+        <div class="align-center"><a href="{{ url_for('product.mgmt_page')}}">商品管理</a></div>
+        <div class="align-center"><a href="">人員管理</a></div>
+        <div class="align-center"><a href="{{ url_for('order.checkout_page')}}">結帳</a></div>
+        <div class="align-center"><a href="{{ url_for('pos_page')}}">POS機設定</a></div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock content%}

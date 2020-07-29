@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% set icon_row = True %}
+
+{% block content %}
+<div style="width: 100%; height: 100%">
+    <div class="flex">
+        <div>
+            <table class="table table-borderless" style="text-align: center;">
+                <thead>
+                    <tr>
+                        <th scope="col">編號</th>
+                        <th scope="col">名稱</th>
+                        <th scope="col">IP</th>
+                        <th scope="col">分開印</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for p in pos_machs %}
+                    <tr data-pid="{{ p.pos_id }}">
+                        <th scope="row">{{ p.pos_id }}</th>
+                        <td>
+                            <input type="text" value="{{ p.pos_name | hide_null }}">
+                        </td>
+                        <td>
+                            <input type="text" value="{{ p.ip | hide_null }}">
+                        </td>
+                        <td>
+                            {% if not p.split %}
+                            <input type="checkbox" class="split">
+                            {% else %}
+                            <input type="checkbox" class="split" checked>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        </div>
+    
+    </div>
+</div>
+
+<script type="text/javascript">
+
+</script>
+{% endblock content%}

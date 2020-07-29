@@ -1,0 +1,68 @@
+{% extends 'product_pane_base.html' %}
+
+{% set add_cate = True %}
+{% set icon_row = True %}
+
+{% block pane_content %}
+    <div class="flex" style="background-color: white;">
+        <div class="tab-content flex-item" style="display: inline-block;">
+            {% for c in categories %}
+                {% if loop.index == 1%}
+            <div class="tab-pane show active" id="content-{{c.id}}" role="tabpanel" aria-labelledby="tab-{{c.id}}">
+                {% else %}
+            <div class="tab-pane" id="content-{{c.id}}" role="tabpanel" aria-labelledby="tab-{{c.id}}">
+                {% endif %}
+
+                <table class="table table-borderless" style="text-align: center;">
+                    <tbody>
+                {% for p in categories[c] %}
+                        <tr>
+                            <th scope="row">{{ p.p_name }}</th>
+                            <td>
+                                <button class="btn btn-secondary edit-product" type="button" data-pid="{{ p.p_id }}">編輯</button>
+                            </td>
+                        </tr>
+                {% endfor %}
+                    </tbody>
+                </table>
+                <button type="button" data-cid="{{c.id}}" class="btn btn-outline-secondary new-product">新增商品</button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var hash = window.location.hash;
+    $('#cate_tabs a[href="' + hash + '"]').tab('show');
+    window.onhashchange = function(){
+        location.reload();
+    };
+
+    $('#add-category').on('click', function(){
+        let name = prompt("請輸入新分類名稱");
+        if(name != null){
+            $.ajax({
+                url: '{{ url_for("product.add_category") }}',
+                type: 'POST',
+                contentType: "application/json",
+                // dataType: 'json',
+                processData : false,
+                data: JSON.stringify({'name': name}),
+                success: function(res){
+                    location.reload();
+                }
+            })
+        }
+    });
+
+    $('.edit-product').on('click', function(){
+        let p_id = $(this).attr('data-pid');
+        window.location.href = '{{ url_for("product.mgmt_page") }}/' + p_id;
+    });
+
+    $('.new-product').on('click', function(){
+        window.location.href = '{{ url_for("product.mgmt_page") }}/create/'+$(this).attr('data-cid');
+    })
+</script>
+{% endblock pane_content%}
