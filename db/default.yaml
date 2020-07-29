@@ -1,0 +1,68 @@
+- model: Desk
+  records:
+    - d_name: A1
+    - d_name: A2
+    - d_name: A3
+    - d_name: A4
+    - d_name: A5
+    - d_name: A6
+    - d_name: A7
+    - d_name: A8
+
+- model: Category
+  records:
+    - name: 冷盤
+    - name: 吃飽飽
+    - name: 古早味大鍋煮
+    - name: 下飯配酒好夥伴
+    - name: 健康蔬菜
+    - name: 燒燒ㄟ湯
+    - name: 台式三杯
+    - name: 現撈嚐鮮
+    - name: 幸福鐵板
+    - name: 燒烤
+
+- model: Product
+  records:
+    - p_name: 米糕
+      cate_id: 3
+      price: 200
+      pos_machs: [1,2]
+    - p_name: 水果
+      cate_id: 5
+      price: 100
+      pos_machs: [1,2,4]
+    - p_name: 魚
+      price: 250
+      cate_id: 2
+      pos_machs: [3,5]
+    - p_name: 高麗菜
+      cate_id: 5
+      price: 120
+      pos_machs: [4]
+      available: False
+
+- model: POS
+  records:
+    - pos_name: 櫃檯
+    - pos_name: 廚房1
+      split: True
+    - pos_name: 堂口
+    - pos_name: 客人
+    - pos_name: 
+    - pos_name: 
+    - pos_name: 
+    - pos_name: 
+    - pos_name: 
+    - pos_name: 
+
+
+- model: Staff
+  records:
+    - s_name: hu
+      password: pbkdf2:sha256:150000$ojbCeSi9$e0eb238ff4100062538850fbfd27519a2986669326663f6bafe46c59166b776e
+      is_superuser: 1
+      
+    - s_name: test
+      password: pbkdf2:sha256:150000$FEbhRkQp$19004bdfaea6219d039073453897f9d07ab88fd1ba01976827847c7d1df6aaee
+
