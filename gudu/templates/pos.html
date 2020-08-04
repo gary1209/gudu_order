@@ -17,13 +17,13 @@
                 </thead>
                 <tbody>
                 {% for p in pos_machs %}
-                    <tr data-pid="{{ p.pos_id }}">
+                    <tr class="pos_row" data-pid="{{ p.pos_id }}">
                         <th scope="row">{{ p.pos_id }}</th>
                         <td>
-                            <input type="text" value="{{ p.pos_name | hide_null }}">
+                            <input class="pos_name" type="text" value="{{ p.pos_name | hide_null }}">
                         </td>
                         <td>
-                            <input type="text" value="{{ p.ip | hide_null }}">
+                            <input class="ip" type="text" value="{{ p.ip | hide_null }}">
                         </td>
                         <td>
                             {% if not p.split %}
@@ -34,6 +34,16 @@
                         </td>
                     </tr>
                 {% endfor %}
+                    <tr>
+                        <th></th>
+                        <td>
+                            <button class="btn btn-outline-secondary" id="save_pos">儲存</button>
+                        </td>
+                        <td>
+                            <button class="btn btn-outline-secondary homepage_btn">返回</button>
+                        </td>
+                        <td></td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -43,6 +53,25 @@
 </div>
 
 <script type="text/javascript">
-
+    $('#save_pos').on('click', function(){
+        var data = [];
+        $('.pos_row').each(function(){
+            let ip = $(this).find('td > input.ip').val();
+            if(ip != ''){
+                let pos_id = parseInt($(this).attr('data-pid'));
+                let pos_name = $(this).find('td > input.pos_name').val();
+                let split = $(this).find('td > input.split').prop("checked");
+                data.push({'pos_id': pos_id, 'pos_name': pos_name, 'ip': ip, 'split': split});
+            }
+        });
+        $.ajax({
+            url: '{{ url_for("pos_page") }}',
+            type: 'POST',
+            contentType: "application/json",
+            dataType: 'json',
+            processData : false,
+            data: JSON.stringify({'data': data}),
+        });
+    });
 </script>
 {% endblock content%}

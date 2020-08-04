@@ -45,9 +45,11 @@
 - model: POS
   records:
     - pos_name: 櫃檯
+      ip: 140.113.131.38
     - pos_name: 廚房1
       split: True
     - pos_name: 堂口
+      split: True
     - pos_name: 客人
     - pos_name: 
     - pos_name: 

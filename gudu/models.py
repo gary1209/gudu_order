@@ -103,6 +103,7 @@ class Checkout(db.Model):
     token = db.Column(db.String, primary_key=True, autoincrement=False)
     checkout_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     staff_id = db.Column(db.Integer, db.ForeignKey('Staff.s_id'), nullable=False)
+    desk_name = db.Column(db.String(45), nullable=False)
     total_price = db.Column(db.Integer, nullable=False)
     note = db.Column(db.String) 
 
@@ -112,4 +113,3 @@ class POS(db.Model):
     pos_name = db.Column(db.String(45))
     ip = db.Column(db.String(20))
     split = db.Column(db.Boolean, default=False)
-        
