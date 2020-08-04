@@ -7,6 +7,10 @@
     <div class="flex">
         <div>
             <div class="align-center flex-item" style="margin: 20 0 20 0"><h4>明細</h4></div>
+            <div class="align-center flex-item" style="margin: 20 0 20 0">
+                <span>桌號：{{ d_name }}</span>
+                <span>結帳人員：{{ s_name }}</span>
+            </div>
             <table class="table table-borderless" style="text-align: center;">
                 <thead>
                     <tr>
@@ -37,18 +41,14 @@
                     </tr>
                     <tr style="height: 50px;">
                         <th>備註</th>
-                        <td colspan="3">
-                            <textarea name="note" cols="40" rows="5"></textarea>
-                        </td>
+                        <td colspan="3">{{ note }}</td>
                     </tr>
                     <tr>
                         <th></th>
                         <td></td>
+                        <td></td>
                         <td>
-                            <button class="btn btn-outline-secondary checkout">結帳</button>
-                        </td>
-                        <td>
-                            <button class="btn btn-outline-secondary back">取消</button>
+                            <button class="btn btn-outline-secondary back">返回</button>
                         </td>
                     </tr>
                 </tfoot>
@@ -59,28 +59,8 @@
 </div>
 
 <script type="text/javascript">
-    var d_id = '{{ desk.d_id }}';
-    var checkout_url = '{{ url_for("order.checkout_page") }}/' + d_id;
-    var total_price = '{{ total_price }}';
-
-    $('.checkout').on('click', function(){
-        let note = $('textarea').val();
-        $.ajax({
-            url: checkout_url,
-            type: 'POST',
-            contentType: "application/json",
-            dataType: 'json',
-            processData : false,
-            data: JSON.stringify({'total_price': total_price, 'note': note}),
-            success: function(res){
-                console.log(res);
-                window.location.href = "{{ url_for('order.checkout_page')}}";
-            }
-        })
-    });
-
     $('.back').on('click', function(){
-        window.location.href = "{{ url_for('order.checkout_page')}}"
+        window.location.href = "{{ url_for('checkout.checkout_open_page')}}"
     });
 </script>
 {% endblock content%}
