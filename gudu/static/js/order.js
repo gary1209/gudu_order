@@ -61,11 +61,17 @@ $('.input-number').change(function() {
         alert('Sorry, the maximum value was reached');
         $(this).val($(this).data('oldValue'));
     }
-
     let p_id = parseInt($(this).parent().parent().attr('data-pid'));
-    let p_name = $(this).parent().parent().attr('data-pname');
-    let num = parseInt($('input[name="quant['+p_id+']"]').val());
-    added_products[p_id]={'p_name': p_name, 'num': num};
+
+    if(valueCurrent != 0){
+        let p_name = $(this).parent().parent().attr('data-pname');
+        // let num = parseInt($('input[name="quant['+p_id+']"]').val());
+        added_products[p_id]={'p_name': p_name, 'num': valueCurrent};
+    }else{
+        delete added_products[p_id];
+    }
+
+    
 });
 
 $(document).on('click', '.remove-product', function(){

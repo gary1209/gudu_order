@@ -36,10 +36,6 @@ input[type=checkbox]{
     width: 100px;
 }
 
-.btn{
-    /*font-size: 25px;*/
-}
-
 .flex{
     display:flex;
     align-items:center;
@@ -83,4 +79,18 @@ input[type=checkbox]{
 
 .sm-font{
     font-size: 1rem;
+}
+
+.border{
+    margin: 0px;
+    padding: 10px;
+}
+
+.border .align-center{
+    text-align: center;
+    line-height: 2;
+}
+
+.pos_name{
+    width: 250px;
 }
