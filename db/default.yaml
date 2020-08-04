@@ -24,30 +24,39 @@
 
 - model: Product
   records:
-    - p_name: 米糕
-      cate_id: 3
-      price: 200
-      pos_machs: [1,2]
-    - p_name: 水果
-      cate_id: 5
-      price: 100
-      pos_machs: [1,2,4]
-    - p_name: 魚
-      price: 250
+    - p_name: 綜合生魚片
+      cate_id: 1
+      price: 240
+      pos_machs: [1,2,4,5]
+    - p_name: 肉臊拌麵
       cate_id: 2
-      pos_machs: [3,5]
-    - p_name: 高麗菜
-      cate_id: 5
-      price: 120
-      pos_machs: [4]
+      price: 60
+      pos_machs: [1,2,4,5]
+    - p_name: 魚皮白菜滷
+      price: 180
+      cate_id: 3
+      pos_machs: [1,2,4,5]
+    - p_name: 炒海瓜子
+      cate_id: 4
+      price: 180
+      pos_machs: [1,3,4,5]
       available: False
+    - p_name: 皮蛋地瓜葉
+      cate_id: 5
+      price: 160
+      pos_machs: [1,3,4,5]
+    - p_name: 麻油藥膳正土羊鍋（配套）
+      cate_id: 6
+      price: 800
+      pos_machs: [1,3,4,5]
+
 
 - model: POS
   records:
     - pos_name: 櫃檯
       ip: 140.113.131.38
     - pos_name: 廚房1
-      split: True
+    - pos_name: 廚房2
     - pos_name: 堂口
       split: True
     - pos_name: 客人
