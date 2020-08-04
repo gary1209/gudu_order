@@ -2,9 +2,10 @@ from flask import Blueprint, render_template, request, redirect, session
 from flask import url_for, jsonify, abort
 from uuid import uuid4
 from datetime import datetime, timezone, timedelta
+import requests
 
 from config import config
-from models import Order, Desk, Product, Category, OrderProduct, Checkout
+from models import Order, Desk, Product, Category, OrderProduct, Checkout, POS
 from utils import login_required, su_required, json_err
 
 app = Blueprint('order', __name__)
@@ -30,22 +31,46 @@ def order(staff):
 
     desk = Desk.query.get(d_id)
     uuid = None
+    order_time = datetime.utcnow()
+    tz_utc8 = timezone(timedelta(hours=8))
+    local_dt = order_time.astimezone(tz_utc8)
+    time = local_dt.strftime("%Y/%m/%d %H:%M:%S")
+
     if not desk.token:
-        uuid = uuid4().hex
+        uuid = uuid4().hex[:12]
         desk.token = uuid
-        desk.first_order_time = datetime.utcnow()
+        desk.first_order_time = order_time
         db.session.commit()
     else:
         uuid = desk.token
-    order = Order(staff=staff, desk=desk, token=uuid)
+    order = Order(staff=staff, desk=desk, token=uuid, order_time=order_time)
     db.session.add(order)
 
+    pos_infos = {}
+
+    pos_machs = POS.query.filter(POS.ip!=None).all()
+    for pos in pos_machs:
+        pos_infos[pos.pos_id] = {'ip':pos.ip, 'split':pos.split, 'products':[]}
+
+    _max_len = 0
     for p_id in products:
         product = Product.query.get(p_id)
-        order_product = OrderProduct(quantity=products[p_id]['num'])
+        quantity = products[p_id]['num']
+        if len(product.p_name) > _max_len:
+            _max_len = len(product.p_name)
+
+        for pos_id in product.pos_machs:
+            if pos_id in pos_infos:
+                pos_infos[pos_id]['products'].append([product.p_name, product.price, quantity])
+
+        order_product = OrderProduct(quantity=quantity)
         order_product.product = product
         order_product.order = order
         db.session.add(order_product)
+
+    for pos_id in pos_infos:
+        print_products(uuid, time, desk.d_name, staff.s_name, pos_infos[pos_id], _max_len)
+
     db.session.commit()
     return 'ok'
 
@@ -60,6 +85,7 @@ def check_desk_orders(staff):
 
     orders = desk.orders
     details = []
+    
     for order in orders:
         for p in order.products:
             quantity = OrderProduct.query.filter(OrderProduct.order==order and OrderProduct.product==p).first().quantity
@@ -67,97 +93,55 @@ def check_desk_orders(staff):
 
     return {'details':details}
 
-@app.route('/checkout', strict_slashes=False)
-@login_required
-@su_required
-def checkout_page(staff):
-    desks = Desk.query.filter(Desk.token != None).all()
-    desks_info = []
-    for d in desks:
-        dt = d.first_order_time.replace(tzinfo=timezone.utc)
-        tz_utc8 = timezone(timedelta(hours=8))
-        local_dt = dt.astimezone(tz_utc8)
-        time = local_dt.strftime("%Y/%m/%d, %H:%M:%S")
-        desks_info.append({'d_id': d.d_id, 'd_name': d.d_name, 'time': time})
-    return render_template('checkout.html', desks_info=desks_info)
 
+def print_products(uuid, time, d_name, s_name, pos_info, _max_len):
+    name_field_len = 14
+    price_field_len = 7
+    total_price_field_len = 8
 
-@app.route('/checkout/<int:d_id>', strict_slashes=False)
-@login_required
-@su_required
-def checkout_detail_page(d_id, staff):
-    desk = Desk.query.get(d_id)
-    token = desk.token
-    orders = desk.orders
-    details = []
-    total_price = 0
-    for order in orders:
-        for p in order.products:
-            quantity = OrderProduct.query.filter(OrderProduct.order==order and OrderProduct.product==p).first().quantity
-            details.append((p, quantity))
-            total_price = total_price + quantity * p.price
-    print(details)
-    return render_template('checkout_detail.html', desk=desk, total_price=total_price, details=details)
-
-
-@app.route('/checkout/<int:d_id>', methods=['POST'], strict_slashes=False)
-@login_required
-@su_required
-def checkout(d_id, staff):
-    total_price = request.json['total_price']
-    note = request.json['note']
-
-    desk = Desk.query.get(d_id)
-    uuid = desk.token
-    if not uuid:
-        abort(403)
-
-    try:
-        checkout = Checkout(token=uuid, staff=staff, total_price=total_price, note=note)
-        db.session.add(checkout)
-        db.session.commit()
-    except Exception as e:
-        print(e)
-        return json_err('cannot add new checkout record')
+    url = 'http://'+ pos_info['ip'] +'/cgi-bin/epos/service.cgi?devid=local_printer&timeout=10000'
+    data ='<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">\
+            <s:Body>\
+                <epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print">\
+                <text lang="zh-hant"/>'
+    
+    if pos_info['split']:
+        for product_info in pos_info['products']:
+            p_name = product_info[0]
+            for count in range(product_info[2]):
+                data = (data +'<text width="2" height="2"/>\
+                    <text>桌號：'+d_name+'&#10;</text>'
+                    +'<text>' + p_name + ' '*(12-len(p_name)) 
+                    +'x1'+'&#10;</text><cut/>')
     else:
-        desk.token = None
-        db.session.commit()
+        data = (data +'<text width="2" height="2"/>\
+                        <text>桌號：'+d_name+'&#10;</text>\
+                        <text width="1" height="1"/>\
+                        <feed unit="24"/>\
+                        <text>時間：'+time+'&#10;訂單編號：'+uuid+'&#10;</text>\
+                        <text>開單人員：'+s_name+'&#10;</text>\
+                        <text>---------------------------------------------&#10;</text>')
+        for product_info in pos_info['products']:
+            p_name = product_info[0]
+            price = str(product_info[1])
+            total_price = str(product_info[1] * product_info[2])
 
-    return {'state':'ok'}
+            data = (data+'<text>' + p_name + ' '*(name_field_len-_max_len) + '  '*(_max_len-len(p_name)) 
+                    +'x '+ str(product_info[2]) 
+                    + ' '*(price_field_len-len(price)) + price
+                    + ' '*(total_price_field_len-len(total_price)) + total_price +'&#10;</text>')
+        data = data + '<cut/>'
 
+    data = data + '</epos-print>\
+            </s:Body>\
+        </s:Envelope>'
 
-def test_order(staff):
-    p1 = Product.query.get(1)
-    p2 = Product.query.get(2)
-    desk = Desk.query.get(1)
-
-    uuid = uuid4().hex
-    desk.token = uuid
-    db.session.commit()
-
-    order = Order(staff=staff, desk=desk, token=uuid)
-    order.products.append(p1)
-    order.products.append(p2)
-    db.session.add(order)
-    db.session.commit()
-
-    return 'ok'
-
-
-@app.route('/check', methods=['GET'])
-@login_required
-def test_check_order(staff):
-    products = Order.query.first().products
-    for p in products:
-        print(p.p_name)
-    return 'ok'
-
-
-@app.route('/current_orders', methods=['GET'])
-@login_required
-def test_check_table_order(staff):
-    desk = Desk.query.get(1)
-    orders = desk.orders
-    for o in orders:
-        print(o.o_id)
-    return 'ok'
+    headers = {'Content-Type':'text/xml; charset=utf-8', 'If-Modified-Since':'Thu, 01 Jan 1970 00:00:00 GMT',
+        'SOAPAction': '""'}
+    print('******ip:'+pos_info['ip']+'******')
+    print(data)
+    res = requests.post(url, data=data.encode(), headers=headers)
+    print(res.status_code)
+    if res.status_code != 200:
+        tree = ElementTree.fromstring(res.content)
+        status = tree[0][0].get('status')
