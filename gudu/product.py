@@ -14,11 +14,12 @@ db = config.db
 @login_required
 @su_required
 def mgmt_page(staff):
-    categories = Category.query.all()
+    categories = Category.query.order_by(Category.id).all()
     _cate = {}
     for c in categories:
         _cate[c] = c.products
     return render_template('product_mgmt.html', categories=_cate)
+
 
 @app.route('/category', methods=['POST'], strict_slashes=False)
 @login_required
@@ -38,7 +39,7 @@ def product_info(p_id, staff):
     product = Product.query.get(p_id)
     if not product:
         abort(403)
-    categories = Category.query.all()
+    categories = Category.query.order_by(Category.id).all()
     return render_template('product.html', product=product, categories=categories)
 
 
@@ -79,6 +80,7 @@ def save_product(p_id, staff):
         db.session.commit()
 
     return {'state': 'ok', 'category': c_id}
+
 
 @app.route('/create/<int:c_id>', methods=['GET'], strict_slashes=False)
 @login_required

@@ -15,13 +15,14 @@ db = config.db
 @app.route('/', methods=['GET'], strict_slashes=False)
 @login_required
 def order_page(staff):
-    categories = Category.query.all()
+    categories = Category.query.order_by(Category.id).all()
     _cate = {}
     for c in categories:
         _cate[c] = c.products
 
     desks = Desk.query.all()
     return render_template('order.html', categories=_cate, desks=desks)
+
 
 @app.route('/', methods=['POST'], strict_slashes=False)
 @login_required
@@ -32,8 +33,9 @@ def order(staff):
     desk = Desk.query.get(d_id)
     uuid = None
     order_time = datetime.utcnow()
+    dt = order_time.replace(tzinfo=timezone.utc)
     tz_utc8 = timezone(timedelta(hours=8))
-    local_dt = order_time.astimezone(tz_utc8)
+    local_dt = dt.astimezone(tz_utc8)
     time = local_dt.strftime("%Y/%m/%d %H:%M:%S")
 
     if not desk.token:
@@ -48,9 +50,9 @@ def order(staff):
 
     pos_infos = {}
 
-    pos_machs = POS.query.filter(POS.ip!=None).all()
+    pos_machs = POS.query.filter(POS.ip is not None).all()
     for pos in pos_machs:
-        pos_infos[pos.pos_id] = {'ip':pos.ip, 'split':pos.split, 'products':[]}
+        pos_infos[pos.pos_id] = {'ip': pos.ip, 'split': pos.split, 'products': []}
 
     _max_len = 0
     for p_id in products:
@@ -85,13 +87,13 @@ def check_desk_orders(staff):
 
     orders = desk.orders
     details = []
-    
+
     for order in orders:
         for p in order.products:
-            quantity = OrderProduct.query.filter(OrderProduct.order==order and OrderProduct.product==p).first().quantity
+            quantity = OrderProduct.query.filter(OrderProduct.order is order and OrderProduct.product is p).first().quantity
             details.append((p.p_name, p.price, quantity, p.price*quantity))
 
-    return {'details':details}
+    return {'details': details}
 
 
 def print_products(uuid, time, d_name, s_name, pos_info, _max_len):
@@ -99,8 +101,8 @@ def print_products(uuid, time, d_name, s_name, pos_info, _max_len):
     price_field_len = 7
     total_price_field_len = 8
 
-    url = 'http://'+ pos_info['ip'] +'/cgi-bin/epos/service.cgi?devid=local_printer&timeout=10000'
-    data ='<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">\
+    url = 'http://' + pos_info['ip'] + '/cgi-bin/epos/service.cgi?devid=local_printer&timeout=10000'
+    data = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">\
             <s:Body>\
                 <epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print">\
                 <text lang="zh-hant"/>'
@@ -109,12 +111,12 @@ def print_products(uuid, time, d_name, s_name, pos_info, _max_len):
         for product_info in pos_info['products']:
             p_name = product_info[0]
             for count in range(product_info[2]):
-                data = (data +'<text width="2" height="2"/>\
+                data = (data + '<text width="2" height="2"/>\
                     <text>桌號：'+d_name+'&#10;</text>'
-                    +'<text>' + p_name + ' '*(12-len(p_name)) 
-                    +'x1'+'&#10;</text><cut/>')
+                    + '<text>' + p_name + ' '*(12-len(p_name))
+                    + 'x1'+'&#10;</text><cut/>')
     else:
-        data = (data +'<text width="2" height="2"/>\
+        data = (data + '<text width="2" height="2"/>\
                         <text>桌號：'+d_name+'&#10;</text>\
                         <text width="1" height="1"/>\
                         <feed unit="24"/>\
@@ -129,14 +131,14 @@ def print_products(uuid, time, d_name, s_name, pos_info, _max_len):
             data = (data+'<text>' + p_name + ' '*(name_field_len-_max_len) + '  '*(_max_len-len(p_name)) 
                     +'x '+ str(product_info[2]) 
                     + ' '*(price_field_len-len(price)) + price
-                    + ' '*(total_price_field_len-len(total_price)) + total_price +'&#10;</text>')
+                    + ' '*(total_price_field_len-len(total_price)) + total_price + '&#10;</text>')
         data = data + '<cut/>'
 
     data = data + '</epos-print>\
             </s:Body>\
         </s:Envelope>'
 
-    headers = {'Content-Type':'text/xml; charset=utf-8', 'If-Modified-Since':'Thu, 01 Jan 1970 00:00:00 GMT',
+    headers = {'Content-Type': 'text/xml; charset=utf-8', 'If-Modified-Since': 'Thu, 01 Jan 1970 00:00:00 GMT',
         'SOAPAction': '""'}
     print('******ip:'+pos_info['ip']+'******')
     print(data)
