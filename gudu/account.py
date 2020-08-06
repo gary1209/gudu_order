@@ -10,13 +10,16 @@ from utils import login_required, flask_login, json_err
 app = Blueprint('account', __name__)
 db = config.db
 
+
 @app.route('/register', methods=['GET'])
 def register_page():
     return render_template('register.html')
 
+
 @app.route('/login', methods=['GET'])
 def login_page():
     return render_template('login.html')
+
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -25,14 +28,20 @@ def login():
     pwd = request.form['password']
     staff = Staff.query.filter_by(s_name=name).first()
     if not staff:
-        return json_err('user not exist')
+        return json_err('username or password is wrong')
 
     if check_password_hash(staff.password, pwd):
         flask_login(staff)
     else:
-        return json_err('password wrong')
+        return json_err('username or password is wrong')
 
     if _next:
         return redirect(_next)
     else:
         return redirect(url_for('index'))
+
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    session.clear()
+    return 'ok'

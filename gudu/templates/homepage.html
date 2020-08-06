@@ -13,10 +13,21 @@
             <div class="align-center"><a href="">人員管理</a></div>
             <div class="align-center"><a href="{{ url_for('checkout.checkout_open_page')}}">結帳</a></div>
             <div class="align-center"><a href="{{ url_for('pos_page')}}">POS機設定</a></div>
+            {% endif %}
+            <div class="align-center"><a href="" class="logout">登出</a></div>
         </div>
-            
-        {% endif %}
     </div>
 </div>
+<script type="text/javascript">
+    $('.logout').on('click', function(){
+        $.ajax({
+            url: '{{url_for("account.logout")}}',
+            type: 'POST',
+            success: function(){
+              location.reload();
+            }
+        })
+    })
+</script>
 
 {% endblock content%}
