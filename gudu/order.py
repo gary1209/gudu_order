@@ -50,7 +50,7 @@ def order(staff):
 
     pos_infos = {}
 
-    pos_machs = POS.query.filter(POS.ip!=None).all()
+    pos_machs = POS.query.filter(POS.ip != '').all()
     for pos in pos_machs:
         pos_infos[pos.pos_id] = {'ip': pos.ip, 'split': pos.split, 'products': []}
 
@@ -67,8 +67,9 @@ def order(staff):
         order_product.order = order
         db.session.add(order_product)
 
+    print(pos_infos)
     for pos_id in pos_infos:
-        if len(pos_infos[pos_id]['products']) != 0:
+        if len(pos_infos[pos_id]['products']) != 0 and pos_id != 1:
             print_products(uuid, time, desk.d_name, staff.s_name, pos_infos[pos_id])
 
     db.session.commit()

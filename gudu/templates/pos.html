@@ -18,6 +18,16 @@
                 <tbody>
                 {% for p in pos_machs %}
                     <tr class="pos_row" data-pid="{{ p.pos_id }}">
+                        {% if p.pos_id == 1 %}
+                        <th scope="row">{{ p.pos_id }}</th>
+                        <td>
+                            <input class="pos_name" type="text" value="{{ p.pos_name | hide_null }}" disabled>
+                        </td>
+                        <td>
+                            <input class="ip" type="text" value="{{ p.ip | hide_null }}">
+                        </td>
+                        <td><input type="checkbox" class="split" disabled></td>
+                        {% else %}
                         <th scope="row">{{ p.pos_id }}</th>
                         <td>
                             <input class="pos_name" type="text" value="{{ p.pos_name | hide_null }}">
@@ -32,6 +42,7 @@
                             <input type="checkbox" class="split" checked>
                             {% endif %}
                         </td>
+                        {% endif %}
                     </tr>
                 {% endfor %}
                     <tr>
@@ -57,12 +68,10 @@
         var data = [];
         $('.pos_row').each(function(){
             let ip = $(this).find('td > input.ip').val();
-            if(ip != ''){
-                let pos_id = parseInt($(this).attr('data-pid'));
-                let pos_name = $(this).find('td > input.pos_name').val();
-                let split = $(this).find('td > input.split').prop("checked");
-                data.push({'pos_id': pos_id, 'pos_name': pos_name, 'ip': ip, 'split': split});
-            }
+            let pos_id = parseInt($(this).attr('data-pid'));
+            let pos_name = $(this).find('td > input.pos_name').val();
+            let split = $(this).find('td > input.split').prop("checked");
+            data.push({'pos_id': pos_id, 'pos_name': pos_name, 'ip': ip, 'split': split});
         });
         $.ajax({
             url: '{{ url_for("pos_page") }}',

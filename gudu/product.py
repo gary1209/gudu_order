@@ -8,7 +8,8 @@ from utils import login_required, su_required, json_err
 app = Blueprint('product', __name__)
 db = config.db
 
-# 如果還有單沒結帳就改商品價格，舊訂單會套用到新價格
+# [TODO]如果還有單沒結帳就改商品價格，舊訂單會套用到新價格
+
 
 @app.route('/', methods=['GET'], strict_slashes=False)
 @login_required
@@ -88,4 +89,4 @@ def save_product(p_id, staff):
 def create_product_page(c_id, staff):
     # categories = Category.query.all()
     category = Category.query.get(c_id)
-    return render_template('product.html', product=None, selected_category=category)
+    return render_template('product.html', product={'pos_machs': [1]}, selected_category=category)
