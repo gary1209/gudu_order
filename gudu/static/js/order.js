@@ -94,11 +94,17 @@ $('#order').on('click', function(){
                 <span class="col-2">'+ value['num'] +'</span>\
                 <div class="btn btn-danger remove-product">x</div>\
             </div>')});
-    $('#order-conf').show();
+    $('#order_conf').show();
     $('#order_modal').modal('show');
 });
 
-$('#order-conf').on('click', function(){
+$('#order_conf').on('click', function(){
+    if($.isEmptyObject(added_products)){
+        alert('請選商品');
+        $('#order_modal').modal('hide');
+        return;
+    }
+    $('#order_conf').attr('disabled', true);
     let d_id = parseInt($('select').val());
     $.ajax({
         url: order_url,
@@ -112,7 +118,7 @@ $('#order-conf').on('click', function(){
             alert('點餐完成');
             location.reload();
         }
-    })
+    });
 });
 
 $('#check_order').on('click', function(){
@@ -136,7 +142,7 @@ $('#check_order').on('click', function(){
                     <span class="col-2">x'+ detail[2] +'</span>\
                     <span class="col-4 ">'+ detail[3] +'</span>\
                 </div>')});
-            $('#order-conf').hide();
+            $('#order_conf').hide();
             $('#order_modal').modal('show');
         }
     })
