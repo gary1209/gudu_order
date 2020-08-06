@@ -107,9 +107,10 @@ class Checkout(db.Model):
     total_price = db.Column(db.Integer, nullable=False)
     note = db.Column(db.String) 
 
+
 class POS(db.Model):
     __tablename__ = 'POS'
     pos_id = db.Column(db.Integer, primary_key=True, nullable=False)
     pos_name = db.Column(db.String(45))
-    ip = db.Column(db.String(20))
+    ip = db.Column(db.String(27))
     split = db.Column(db.Boolean, default=False)
