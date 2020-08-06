@@ -50,16 +50,13 @@ def order(staff):
 
     pos_infos = {}
 
-    pos_machs = POS.query.filter(POS.ip is not None).all()
+    pos_machs = POS.query.filter(POS.ip!=None).all()
     for pos in pos_machs:
         pos_infos[pos.pos_id] = {'ip': pos.ip, 'split': pos.split, 'products': []}
 
-    _max_len = 0
     for p_id in products:
         product = Product.query.get(p_id)
         quantity = products[p_id]['num']
-        if len(product.p_name) > _max_len:
-            _max_len = len(product.p_name)
 
         for pos_id in product.pos_machs:
             if pos_id in pos_infos:
@@ -71,7 +68,8 @@ def order(staff):
         db.session.add(order_product)
 
     for pos_id in pos_infos:
-        print_products(uuid, time, desk.d_name, staff.s_name, pos_infos[pos_id], _max_len)
+        if len(pos_infos[pos_id]['products']) != 0:
+            print_products(uuid, time, desk.d_name, staff.s_name, pos_infos[pos_id])
 
     db.session.commit()
     return 'ok'
@@ -90,13 +88,13 @@ def check_desk_orders(staff):
 
     for order in orders:
         for p in order.products:
-            quantity = OrderProduct.query.filter(OrderProduct.order is order and OrderProduct.product is p).first().quantity
+            quantity = OrderProduct.query.filter(OrderProduct.order == order and OrderProduct.product == p).first().quantity
             details.append((p.p_name, p.price, quantity, p.price*quantity))
 
     return {'details': details}
 
 
-def print_products(uuid, time, d_name, s_name, pos_info, _max_len):
+def print_products(uuid, time, d_name, s_name, pos_info):
     name_field_len = 14
     price_field_len = 7
     total_price_field_len = 8
@@ -123,16 +121,23 @@ def print_products(uuid, time, d_name, s_name, pos_info, _max_len):
                         <text>時間：'+time+'&#10;訂單編號：'+uuid+'&#10;</text>\
                         <text>開單人員：'+s_name+'&#10;</text>\
                         <text>---------------------------------------------&#10;</text>')
+        total_quantity = 0
+        order_price = 0
         for product_info in pos_info['products']:
             p_name = product_info[0]
             price = str(product_info[1])
-            total_price = str(product_info[1] * product_info[2])
-
-            data = (data+'<text>' + p_name + ' '*(name_field_len-_max_len) + '  '*(_max_len-len(p_name)) 
-                    +'x '+ str(product_info[2]) 
+            total_price = product_info[1] * product_info[2]
+            total_quantity = total_quantity + product_info[2]
+            order_price = order_price + total_price
+            data = (data+'<text>' + p_name + ' '*(name_field_len-12) + '  '*(12-len(p_name)) 
+                    +'x '+ str(product_info[2])
                     + ' '*(price_field_len-len(price)) + price
-                    + ' '*(total_price_field_len-len(total_price)) + total_price + '&#10;</text>')
-        data = data + '<cut/>'
+                    + ' '*(total_price_field_len-len(str(total_price))) + str(total_price) + '&#10;</text>')
+        data = (data + '<text>---------------------------------------------&#10;</text>'
+            + '<text>&lt;共' + str(total_quantity) + '份&gt;&#10;</text>\
+            <text width="2" height="2"/>\
+            <text>小計：'+ str(order_price) + '&#10;</text>\
+            <cut/>')
 
     data = data + '</epos-print>\
             </s:Body>\
