@@ -7,19 +7,21 @@ from config import config
 
 db = config.db
 
+
 class Staff(db.Model):
     __tablename__ = 'Staff'
     s_id = db.Column(db.Integer, primary_key=True, nullable=False)
     s_name = db.Column(db.String(45), nullable=False)
     password = db.Column(db.String(255), nullable=False)
-    is_superuser = db.Column(db.Boolean, default=False) # [TODO] super user??
+    is_superuser = db.Column(db.Boolean, default=False)
+    suspended = db.Column(db.Boolean, default=False)
 
     orders = db.relationship('Order', backref='staff')
     checkouts = db.relationship('Checkout', backref='staff')
 
     @property
     def is_su(self):
-        return self.is_superuser == True
+        return self.is_superuser is True
 
 
 class Desk(db.Model):
@@ -29,7 +31,8 @@ class Desk(db.Model):
     token = db.Column(db.String, unique=True) # 這桌客人的token
     first_order_time = db.Column(db.DateTime)
     orders = db.relationship('Order',
-        primaryjoin="and_(Order.desk_id==Desk.d_id, Order.token==Desk.token)", backref='desk')
+        primaryjoin="and_(Order.desk_id==Desk.d_id, Order.token==Desk.token)",
+        backref='desk', order_by='Order.o_id')
 
 
 class Category(db.Model):
@@ -60,8 +63,8 @@ class Order(db.Model):
     staff_id = db.Column(db.Integer, db.ForeignKey('Staff.s_id'), nullable=False)
     desk_id = db.Column(db.Integer, db.ForeignKey('Desk.d_id'), nullable=False)
     # 每組客人有不同token, 用來區分是哪組客人
-    token = db.Column(db.String, nullable=False) 
-    note = db.Column(db.String) 
+    token = db.Column(db.String, nullable=False)
+    note = db.Column(db.String)
 
     products = association_proxy("order_products", "product")
 
@@ -87,13 +90,12 @@ class OrderProduct(db.Model):
     product = db.relationship(Product, backref="order_products")
     order = db.relationship(Order, backref="order_products")
 
-
     @classmethod
     def total_price(cls, order):
         records = cls.query.filter(cls.order == order).all()
         if len(records) != 0:
-            return sum(list(map(lambda x: x.product.price * x.quantity, records))) 
-        else: 
+            return sum(list(map(lambda x: x.product.price * x.quantity, records)))
+        else:
             return 0
 
 

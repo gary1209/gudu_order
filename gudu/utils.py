@@ -19,8 +19,11 @@ def login_required(f):
             return redirect(url_for('account.login', next=request.path))
 
         staff = Staff.query.get(s_id)
+        if staff.suspended:
+            return json_err('你已被停權，請找管理員')
         return f(*args, staff=staff, **kwargs)
     return wrapper
+
 
 def su_required(f):
     @wraps(f)
@@ -30,13 +33,14 @@ def su_required(f):
         return f(*args, staff=staff, **kwargs)
     return wrapper
 
+
 def json_err(reason: str, **others):
     x = {'state': 'error', 'reason': reason}
     x.update(others)
     return jsonify(x)
 
+
 def flask_login(staff):
     # update http session
     session['s_id'] = staff.s_id
     return staff
-
