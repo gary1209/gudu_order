@@ -31,9 +31,7 @@
                         <th scope="row">{{ c.time }}</th>
                         <th scope="row">{{ c.desk_name }}</th>
                         <td>
-                            <button type="button" class="btn checkout_info" data-token="{{ c.token }}">
-                                <span class="fas fa-info-circle"></span>
-                            </button>
+                            <button type="button" class="btn btn-outline-secondary checkout_info" data-token="{{ c.token }}">明細</button>
                         </td>
                     </tr>
                 {% endfor %}
