@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% set icon_row = True %}
+
+{% block content %}
+<div style="width: 100%; height: 100%">
+    <div class="flex">
+        <div>
+            <table class="table table-borderless" style="text-align: center;">
+                <thead>
+                    <tr>
+                        <th scope="col">名稱</th>
+                        <th scope="col">管理人員</th>
+                        <th scope="col">停用</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in staffs %}
+                    <tr data-sid="{{ s.id }}" class="staff_row">
+                        <th scope="row">{{ s.name }}</th>
+                        <td>
+                            {% if s.is_superuser %}
+                            <input type="checkbox" class="superuser" checked>
+                            {% else %}
+                            <input type="checkbox" class="superuser">
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if s.suspended %}
+                            <input type="checkbox" class="suspended" checked>
+                            {% else %}
+                            <input type="checkbox" class="suspended">
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th><button class="btn btn-outline-secondary" id="add">新增</button></th>
+                        <td><button class="btn btn-outline-secondary" id="save">儲存</button></td>
+                        <td><button class="btn btn-outline-secondary" id="back">返回</button></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="modal fade" tabindex="-1" role="dialog" id="new_staff_modal">
+  <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 900px;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title row">
+                <span>新增員工帳號</span>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <form>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                          <span class="input-group-text">帳號</span>
+                        </div>
+                        <input type="text" name="name" class="form-control" aria-label="Username" aria-describedby="Username">
+                    </div>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                          <span class="input-group-text">密碼</span>
+                        </div>
+                        <input type="password" name="password" class="form-control" aria-label="Password" aria-describedby="Password">
+                    </div>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                          <span class="input-group-text">確認密碼</span>
+                        </div>
+                        <input type="password" name="password_conf" class="form-control" aria-label="Password" aria-describedby="Password Confirm">
+                    </div>
+                </form>
+            </div>
+                
+        </div>
+        <div class="modal-footer">
+            <button id="submit" class="btn btn-primary">確定</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#back').on('click', function(){
+        window.location.href = "{{ url_for('index')}}"
+    });
+    $('#add').on('click', function(){
+        $('.form-control').val('');
+        $('#new_staff_modal').modal('show');
+    });
+    $('#submit').on('click', function(){
+        $.ajax({
+            url: '{{ url_for("account.register") }}',
+            type: 'POST',
+            data: $('form').serialize(),
+            success: function(res){
+                console.log(res);
+                if(res['state'] != 'ok'){
+                    alert(res['reason']);
+                }else{
+                    location.reload();
+                }
+            }
+        })
+    })
+    $('#save').on('click', function(){
+        var data = [];
+        $('.staff_row').each(function(){
+            let id = parseInt($(this).attr('data-sid'));
+            let is_superuser = $(this).find('td > input.superuser').prop("checked");
+            let suspended = $(this).find('td > input.suspended').prop("checked");
+            data.push({'id': id, 'data': {'is_superuser': is_superuser, 'suspended': suspended}});
+        });
+        $.ajax({
+            url: '{{ url_for("account.save") }}',
+            type: 'POST',
+            contentType: "application/json",
+            dataType: 'json',
+            processData : false,
+            data: JSON.stringify({'data': data}),
+            success: function(res){
+                window.location.reload();
+            }
+        });
+    })
+</script>
+{% endblock content%}

@@ -16,11 +16,11 @@ def login_required(f):
     def wrapper(*args, **kwargs):
         s_id = session.get('s_id')
         if s_id is None:
-            return redirect(url_for('account.login', next=request.path))
+            return redirect(url_for('account.login_page', next=request.path))
 
         staff = Staff.query.get(s_id)
         if staff.suspended:
-            return json_err('你已被停權，請找管理員')
+            return redirect(url_for('account.login_page', next=request.path))
         return f(*args, staff=staff, **kwargs)
     return wrapper
 

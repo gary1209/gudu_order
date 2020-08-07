@@ -1,6 +1,14 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
+{% if error %}
+  <div class="alert alert-danger text-center" role="alert"
+       style="border-radius: 0">
+    {{ error }}
+  </div>
+{% endif %}
+
 <div style="width: 100%; height: 100%; padding-top: 5%">
   <div class="flex">
       <div class="text-center form-group">
