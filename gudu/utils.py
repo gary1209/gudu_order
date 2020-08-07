@@ -42,5 +42,5 @@ def json_err(reason: str, **others):
 
 def flask_login(staff):
     # update http session
-    session['s_id'] = staff.s_id
+    session['s_id'] = staff.id
     return staff

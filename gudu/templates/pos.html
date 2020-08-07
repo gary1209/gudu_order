@@ -17,20 +17,20 @@
                 </thead>
                 <tbody>
                 {% for p in pos_machs %}
-                    <tr class="pos_row" data-pid="{{ p.pos_id }}">
-                        {% if p.pos_id == 1 %}
-                        <th scope="row">{{ p.pos_id }}</th>
+                    <tr class="pos_row" data-pid="{{ p.id }}">
+                        {% if p.id == 1 %}
+                        <th scope="row">{{ p.id }}</th>
                         <td>
-                            <input class="pos_name" type="text" value="{{ p.pos_name | hide_null }}" disabled>
+                            <input class="pos_name" type="text" value="{{ p.name | hide_null }}" disabled>
                         </td>
                         <td>
                             <input class="ip" type="text" value="{{ p.ip | hide_null }}">
                         </td>
                         <td><input type="checkbox" class="split" disabled></td>
                         {% else %}
-                        <th scope="row">{{ p.pos_id }}</th>
+                        <th scope="row">{{ p.id }}</th>
                         <td>
-                            <input class="pos_name" type="text" value="{{ p.pos_name | hide_null }}">
+                            <input class="pos_name" type="text" value="{{ p.name | hide_null }}">
                         </td>
                         <td>
                             <input class="ip" type="text" value="{{ p.ip | hide_null }}">

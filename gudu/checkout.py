@@ -23,7 +23,7 @@ def checkout_open_page(staff):
         tz_utc8 = timezone(timedelta(hours=8))
         local_dt = dt.astimezone(tz_utc8)
         time = local_dt.strftime("%Y/%m/%d, %H:%M:%S")
-        desks_info.append({'d_id': d.d_id, 'd_name': d.d_name, 'time': time})
+        desks_info.append({'d_id': d.id, 'd_name': d.name, 'time': time})
     return render_template('checkout_open.html', desks_info=desks_info)
 
 
@@ -50,7 +50,6 @@ def checkout_page(d_id, staff):
 def checkout(d_id, staff):
     check_price = request.json['total_price']
     note = request.json['note']
-    d_name = request.json['desk_name']
 
     desk = Desk.query.get(d_id)
     uuid = desk.token
@@ -70,10 +69,10 @@ def checkout(d_id, staff):
 
     try:
         checkout = Checkout(token=uuid, staff=staff, total_price=check_price,
-                            note=note, desk_name=d_name)
+                            note=note, desk_name=desk.name)
         db.session.add(checkout)
         ip = POS.query.get(1).ip
-        print_bill(ip, uuid, time, d_name, staff.s_name, checkout_info, check_price)
+        print_bill(ip, uuid, time, desk.name, staff.name, checkout_info, check_price)
         db.session.commit()
     except Exception as e:
         print(e)
@@ -154,12 +153,12 @@ def print_bill(ip, uuid, time, d_name, s_name, checkout_info, check_price):
         if idx is not 0:
             data = data + '<text>---------------------------------------------&#10;</text>'
         for order_product in order_products:
-            p_name = order_product.product.p_name
+            name = order_product.product.name
             price = str(order_product.product.price)
             quantity = order_product.quantity
             total_quantity = total_quantity + quantity
             total_price = str(order_product.product.price * quantity)
-            data = (data + '<text>' + p_name + ' '*(name_field_len-12) + '  '*(12-len(p_name))
+            data = (data + '<text>' + name + ' '*(name_field_len-12) + '  '*(12-len(name))
                     +'x '+ str(quantity)
                     + ' '*(price_field_len-len(price)) + price
                     + ' '*(total_price_field_len-len(total_price)) + total_price + '&#10;</text>')

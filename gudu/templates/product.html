@@ -11,7 +11,7 @@
                     <tr>
                         <th scope="row">名稱</th>
                         <td>
-                            <input class="required" type="text" id="name" value="{{ product.p_name }}" >
+                            <input class="required" type="text" id="name" value="{{ product.name }}" >
                         </td>
                     </tr>
                     <tr>
@@ -74,7 +74,7 @@
 </div>
 
 <script type="text/javascript">
-    var p_id = "{{ product.p_id }}";
+    var p_id = "{{ product.id }}";
     var url = "{{ url_for('product.mgmt_page') }}";
     if(p_id == ""){
         p_id = 0;

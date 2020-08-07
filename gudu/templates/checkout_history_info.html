@@ -23,7 +23,7 @@
                 <tbody>
                     {% for (p, quantity) in details %}
                     <tr>
-                        <th scope="row">{{ p.p_name }}</th>
+                        <th scope="row">{{ p.name }}</th>
                         <td>{{ p.price }}</td>
                         <td>{{ quantity }}</td>
                         {% set price = p.price * quantity%}

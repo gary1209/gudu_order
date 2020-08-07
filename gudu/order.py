@@ -52,7 +52,7 @@ def order(staff):
 
     pos_machs = POS.query.filter(POS.ip != '').all()
     for pos in pos_machs:
-        pos_infos[pos.pos_id] = {'ip': pos.ip, 'split': pos.split, 'products': []}
+        pos_infos[pos.id] = {'ip': pos.ip, 'split': pos.split, 'products': []}
 
     for p_id in products:
         product = Product.query.get(p_id)
@@ -60,7 +60,7 @@ def order(staff):
 
         for pos_id in product.pos_machs:
             if pos_id in pos_infos:
-                pos_infos[pos_id]['products'].append([product.p_name, product.price, quantity])
+                pos_infos[pos_id]['products'].append([product.name, product.price, quantity])
 
         order_product = OrderProduct(quantity=quantity)
         order_product.product = product
@@ -70,7 +70,7 @@ def order(staff):
     print(pos_infos)
     for pos_id in pos_infos:
         if len(pos_infos[pos_id]['products']) != 0 and pos_id != 1:
-            print_products(uuid, time, desk.d_name, staff.s_name, pos_infos[pos_id])
+            print_products(uuid, time, desk.name, staff.name, pos_infos[pos_id])
 
     db.session.commit()
     return 'ok'
@@ -90,7 +90,7 @@ def check_desk_orders(staff):
     for order in orders:
         for p in order.products:
             quantity = OrderProduct.query.filter(OrderProduct.order == order and OrderProduct.product == p).first().quantity
-            details.append((p.p_name, p.price, quantity, p.price*quantity))
+            details.append((p.name, p.price, quantity, p.price*quantity))
 
     return {'details': details}
 

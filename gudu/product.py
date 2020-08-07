@@ -65,7 +65,7 @@ def save_product(p_id, staff):
         category = Category.query.get(c_id)
         if not category:
             abort(403)
-        product.p_name = p_name
+        product.name = p_name
         product.price = price
         product.category = category
         product.pos_machs = pos_machs
@@ -75,7 +75,7 @@ def save_product(p_id, staff):
         category = Category.query.get(c_id)
         if not category:
             abort(403)
-        product = Product(p_name=p_name, price=price, pos_machs=pos_machs, available=available)
+        product = Product(name=p_name, price=price, pos_machs=pos_machs, available=available)
         product.category = category
         db.session.add(product)
         db.session.commit()

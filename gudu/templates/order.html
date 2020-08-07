@@ -13,7 +13,7 @@
             <select required>
                 <option selected="selected" disabled="true">選擇</option>
                 {% for d in desks %}
-                <option value="{{d.d_id}}">{{d.d_name}}</option>
+                <option value="{{d.id}}">{{d.name}}</option>
                 {% endfor %}
             </select>
         </div>
@@ -39,26 +39,26 @@
                 <table class="table table-borderless" style="text-align: center;">
                     <tbody>
                 {% for p in categories[c] %}
-                        <tr data-pid="{{ p.p_id }}" data-pname="{{ p.p_name }}">
+                        <tr data-pid="{{ p.id }}" data-pname="{{ p.name }}">
                     {% if p.available == 1 %}
-                            <th scope="row">{{ p.p_name }}</th>
+                            <th scope="row">{{ p.name }}</th>
                             <td>
-                                <button type="button" class="btn btn-danger btn-number" data-type="minus" data-field="quant[{{ p.p_id }}]">
+                                <button type="button" class="btn btn-danger btn-number" data-type="minus" data-field="quant[{{ p.id }}]">
                                     <span class="fas fa-minus"></span>
                                 </button>
-                                <input type="text" name="quant[{{ p.p_id }}]" class="input-number" value="0" min="-100" max="100">
-                                <button type="button" class="btn btn-success btn-number" data-type="plus" data-field="quant[{{ p.p_id }}]">
+                                <input type="text" name="quant[{{ p.id }}]" class="input-number" value="0" min="-100" max="100">
+                                <button type="button" class="btn btn-success btn-number" data-type="plus" data-field="quant[{{ p.id }}]">
                                     <span class="fas fa-plus"></span>
                                 </button>
                             </td>
                     {% else %}
-                            <th scope="row" class="strikethrough">{{ p.p_name }}</th>
+                            <th scope="row" class="strikethrough">{{ p.name }}</th>
                             <td>
-                                <button type="button" class="btn btn-danger btn-number disabled" disabled="disabled" data-type="minus" data-field="quant[{{ p.p_id }}]">
+                                <button type="button" class="btn btn-danger btn-number disabled" disabled="disabled" data-type="minus" data-field="quant[{{ p.id }}]">
                                     <span class="fas fa-minus"></span>
                                 </button>
-                                <input type="text" name="quant[{{ p.p_id }}]" class="input-number" value="0" min="-100" max="100">
-                                <button type="button" class="btn btn-success btn-number disabled" disabled="disabled" data-type="plus" data-field="quant[{{ p.p_id }}]">
+                                <input type="text" name="quant[{{ p.id }}]" class="input-number" value="0" min="-100" max="100">
+                                <button type="button" class="btn btn-success btn-number disabled" disabled="disabled" data-type="plus" data-field="quant[{{ p.id }}]">
                                     <span class="fas fa-plus"></span>
                                 </button>
                             </td>

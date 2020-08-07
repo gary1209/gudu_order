@@ -42,7 +42,7 @@ def save_pos(staff):
     for pos in pos_machs:
         p = POS.query.get(pos['pos_id'])
         p.ip = pos['ip']
-        p.pos_name = pos['pos_name']
+        p.name = pos['pos_name']
         p.split = pos['split']
         db.session.commit()
     return redirect(url_for('pos_page'))

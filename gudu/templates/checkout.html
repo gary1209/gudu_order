@@ -19,7 +19,7 @@
                 <tbody>
                     {% for (p, quantity) in details %}
                     <tr>
-                        <th scope="row">{{ p.p_name }}</th>
+                        <th scope="row">{{ p.name }}</th>
                         <td>{{ p.price }}</td>
                         <td>{{ quantity }}</td>
                         {% set price = p.price * quantity%}
@@ -59,7 +59,7 @@
 </div>
 
 <script type="text/javascript">
-    var d_id = '{{ desk.d_id }}';
+    var d_id = '{{ desk.id }}';
     var checkout_url = '{{ url_for("checkout.checkout_open_page") }}' + d_id;
     var total_price = '{{ total_price }}';
 
@@ -71,11 +71,11 @@
             contentType: "application/json",
             dataType: 'json',
             processData : false,
-            data: JSON.stringify({'total_price': total_price, 'note': note, 'desk_name': '{{ desk.d_name }}'}),
+            data: JSON.stringify({'total_price': total_price, 'note': note}),
             success: function(res){
                 console.log(res);
                 window.location.href = "{{ url_for('checkout.checkout_open_page')}}";
-                
+
             }
         })
     });

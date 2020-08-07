@@ -17,9 +17,9 @@
                     <tbody>
                 {% for p in categories[c] %}
                         <tr>
-                            <th scope="row">{{ p.p_name }}</th>
+                            <th scope="row">{{ p.name }}</th>
                             <td>
-                                <button class="btn btn-secondary edit-product" type="button" data-pid="{{ p.p_id }}">編輯</button>
+                                <button class="btn btn-secondary edit-product" type="button" data-pid="{{ p.id }}">編輯</button>
                             </td>
                         </tr>
                 {% endfor %}
