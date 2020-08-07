@@ -1,5 +1,32 @@
 - model: Desk
   records:
+    - name: 11
+    - name: 12
+    - name: 13
+    - name: 14
+    - name: 15
+    - name: 16
+    - name: 17
+    - name: 18
+    - name: 19
+    - name: 21
+    - name: 22
+    - name: 23
+    - name: 24
+    - name: 25
+    - name: 26
+    - name: 27
+    - name: 28
+    - name: 29
+    - name: 31
+    - name: 32
+    - name: 33
+    - name: 34
+    - name: 35
+    - name: 36
+    - name: 37
+    - name: 38
+    - name: 39
     - name: A1
     - name: A2
     - name: A3
@@ -8,6 +35,28 @@
     - name: A6
     - name: A7
     - name: A8
+    - name: A9
+    - name: A10
+    - name: 外帶1
+    - name: 外帶2
+    - name: 外帶3
+    - name: 外帶4
+    - name: 外帶5
+    - name: 外帶6
+    - name: 外帶7
+    - name: 外帶8
+    - name: 外帶9
+    - name: 外帶10
+    - name: 外帶11
+    - name: 外帶12
+    - name: 外帶13
+    - name: 外帶14
+    - name: 外帶15
+    - name: 外帶16
+    - name: 外帶17
+    - name: 外帶18
+    - name: 外帶19
+    - name: 外帶20
 
 - model: Category
   records:
@@ -21,6 +70,8 @@
     - name: 現撈嚐鮮
     - name: 幸福鐵板
     - name: 燒烤
+    - name: 飲品
+    - name: 其他
 
 - model: Product
   records:
