@@ -1,6 +1,7 @@
 from functools import wraps
 
 from flask import session, request, redirect, url_for, abort, jsonify
+from datetime import datetime, timezone, timedelta
 
 from models import Staff
 
@@ -44,3 +45,11 @@ def flask_login(staff):
     # update http session
     session['s_id'] = staff.id
     return staff
+
+
+def time_translate(dt):
+    dt = dt.replace(tzinfo=timezone.utc)
+    tz_utc8 = timezone(timedelta(hours=8))
+    local_dt = dt.astimezone(tz_utc8)
+    time = local_dt.strftime("%Y/%m/%d %H:%M:%S")
+    return time

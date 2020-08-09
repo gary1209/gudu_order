@@ -1,11 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, session
 from flask import url_for, jsonify, abort
 from uuid import uuid4
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 
 from config import config
 from models import Order, Desk, Product, Category, OrderProduct, Checkout, Staff, POS
-from utils import login_required, su_required, json_err
+from utils import login_required, su_required, json_err, time_translate
 import requests
 
 app = Blueprint('checkout', __name__)
@@ -19,10 +19,7 @@ def checkout_open_page(staff):
     desks = Desk.query.filter(Desk.token != None).all()
     desks_info = []
     for d in desks:
-        dt = d.first_order_time.replace(tzinfo=timezone.utc)
-        tz_utc8 = timezone(timedelta(hours=8))
-        local_dt = dt.astimezone(tz_utc8)
-        time = local_dt.strftime("%Y/%m/%d, %H:%M:%S")
+        time = time_translate(d.first_order_time)
         desks_info.append({'d_id': d.id, 'd_name': d.name, 'time': time})
     return render_template('checkout_open.html', desks_info=desks_info)
 
@@ -37,9 +34,12 @@ def checkout_page(d_id, staff):
     details = []
     total_price = 0
     for order in orders:
+        time = time_translate(order.order_time)
+        detail = {'staff': order.staff.name, 'time': time, 'products': []}
         for op in order.order_products:
-            details.append((op.product, op.quantity))
+            detail['products'].append((op.product, op.quantity))
             total_price = total_price + op.quantity * op.product.price
+        details.append(detail)
 
     return render_template('checkout.html', desk=desk, total_price=total_price, details=details)
 
@@ -58,10 +58,7 @@ def checkout(d_id, staff):
 
     orders = desk.orders
     checkout_info = []
-    dt = datetime.utcnow().replace(tzinfo=timezone.utc)
-    tz_utc8 = timezone(timedelta(hours=8))
-    local_dt = dt.astimezone(tz_utc8)
-    time = local_dt.strftime("%Y/%m/%d %H:%M:%S")
+    time = time_translate(datetime.utcnow())
     for order in orders:
         order.status = True
         order_products = order.order_products
@@ -72,6 +69,7 @@ def checkout(d_id, staff):
                             note=note, desk_name=desk.name)
         db.session.add(checkout)
         ip = POS.query.get(1).ip
+        # only pos machine at the checkout counter prints the checkout info
         print_bill(ip, uuid, time, desk.name, staff.name, checkout_info, check_price)
         db.session.commit()
     except Exception as e:
@@ -103,11 +101,8 @@ def checkout_history_page(duration, staff):
         checkouts = Checkout.query.filter(Checkout.checkout_time > month_dt).all()
 
     checkout_infos = []
-    tz_utc8 = timezone(timedelta(hours=8))
     for c in checkouts:
-        dt = c.checkout_time.replace(tzinfo=timezone.utc)
-        local_dt = dt.astimezone(tz_utc8)
-        time = local_dt.strftime("%Y/%m/%d, %H:%M:%S")
+        time = time_translate(c.checkout_time)
         checkout_infos.append({'desk_name': c.desk_name, 'time': time, 'token': c.token})
 
     return render_template('checkout_history.html', type=duration, checkout_infos=checkout_infos)
@@ -118,16 +113,21 @@ def checkout_history_page(duration, staff):
 @su_required
 def checkout_history_info_page(token, staff):
     checkout = Checkout.query.get(token)
-    s_name = Staff.query.get(checkout.staff_id).s_name
+    s_name = Staff.query.get(checkout.staff_id).name
     orders = Order.query.filter(Order.token == token).all()
     details = []
+    time = time_translate(checkout.checkout_time)
 
     for order in orders:
+        time = time_translate(order.order_time)
+        detail = {'staff': order.staff.name, 'time': time, 'products': []}
         for op in order.order_products:
-            details.append((op.product, op.quantity))
+            detail['products'].append((op.product, op.quantity))
+        details.append(detail)
 
     return render_template('checkout_history_info.html', d_name=checkout.desk_name, s_name=s_name,
-                           details=details, total_price=checkout.total_price, note=checkout.note)
+                           details=details, total_price=checkout.total_price,
+                           note=checkout.note, time=time)
 
 
 def print_bill(ip, uuid, time, d_name, s_name, checkout_info, check_price):
