@@ -19,8 +19,7 @@ def checkout_open_page(staff):
     desks = Desk.query.filter(Desk.token != None).all()
     desks_info = []
     for d in desks:
-        time = time_translate(d.first_order_time)
-        desks_info.append({'d_id': d.id, 'd_name': d.name, 'time': time})
+        desks_info.append({'d_id': d.id, 'd_name': d.name})
     return render_template('checkout_open.html', desks_info=desks_info)
 
 
@@ -77,6 +76,7 @@ def checkout(d_id, staff):
         return json_err('cannot add new checkout record')
     else:
         desk.token = None
+        desk.occupied = False
         db.session.commit()
     return {'state': 'ok'}
 

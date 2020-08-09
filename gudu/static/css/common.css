@@ -32,6 +32,10 @@ input[type=checkbox]{
   padding: 10px;
 }
 
+.modal-dialog{
+    max-width: 600px;
+}
+
 .input-number{
     width: 100px;
 }

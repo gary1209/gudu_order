@@ -41,7 +41,7 @@ def order(staff):
     if not desk.token:
         uuid = uuid4().hex[:12]
         desk.token = uuid
-        desk.first_order_time = order_time
+        desk.occupied = True
         db.session.commit()
     else:
         uuid = desk.token
@@ -69,11 +69,13 @@ def order(staff):
 
     print(pos_infos)
     for pos_id in pos_infos:
+        # pos machine at the checkout counter won't print the order info
         if len(pos_infos[pos_id]['products']) != 0 and pos_id != 1:
             print_products(uuid, time, desk.name, staff.name, pos_infos[pos_id])
 
     db.session.commit()
     return 'ok'
+
 
 @app.route('/check', methods=['POST'], strict_slashes=False)
 @login_required

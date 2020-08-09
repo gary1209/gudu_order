@@ -29,10 +29,15 @@ class Desk(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     name = db.Column(db.String(45), nullable=False, unique=True)
     token = db.Column(db.String, unique=True)
-    first_order_time = db.Column(db.DateTime)
+    occupied = db.Column(db.Boolean, default=False)
+
     orders = db.relationship('Order',
         primaryjoin="and_(Order.desk_id==Desk.id, Order.token==Desk.token)",
         backref='desk', order_by='Order.id')
+
+    @property
+    def is_occupied(self):
+        return self.occupied is True
 
 
 class Category(db.Model):

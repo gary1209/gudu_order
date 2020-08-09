@@ -1,21 +1,166 @@
 {% extends 'base.html' %}
 
-{% block head %}
-<link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/card.css')}}">
-{% endblock head %}
+{% set icon_row = True %}
+
 
 {% block content %}
-<div style="width: 100%; height: 100%; padding-top: 5%">
-    <div class="flex">
-        {% for d in desks %}
-            <div class="mid-card flex-item table-card mid-font" data-did="{{ d.d_id }}">{{ d.d_name }}</div>
+<div style="width: 100%; height: 100%;">
+    <ul class="nav nav-tabs nav-fill gray-bg" role="tablist" id="desk_tabs">
+        {% for data in desks %}
+        <li class="nav-item" role="presentation">
+            {% if loop.index == 1%}
+            <a class="nav-link active" id="tab-{{data}}" data-toggle="tab" href="#content-{{data}}" role="tab" aria-controls="content-{{data}}" aria-selected="true">{{ data }}</a>
+            {% else %}
+            <a class="nav-link" id="tab-{{data}}" data-toggle="tab" href="#content-{{data}}" role="tab" aria-controls="content-{{data}}" aria-selected="false">{{ data }}</a>
+            {% endif %}
+        </li>
         {% endfor %}
+    </ul>
+    <div class="flex" style="background-color: white;">
+        <div class="tab-content flex-item" style="display: inline-block;">
+            {% for data in desks %}
+                {% if loop.index == 1%}
+            <div class="tab-pane show active" id="content-{{data}}" role="tabpanel" aria-labelledby="tab-{{data}}">
+                {% else %}
+            <div class="tab-pane" id="content-{{data}}" role="tabpanel" aria-labelledby="tab-{{data}}">
+                {% endif %}
+
+                <table class="table table-borderless" style="text-align: center;">
+                    <tbody>
+                {% for desk in desks[data] %}
+                    {% if not desk.is_occupied %}
+                        <tr>
+                            <th scope="row">{{ desk.name }}</th>
+                            <td>
+                                <button type="button" data-did="{{ desk.id }}" class="btn btn-danger btn-number sit">入桌
+                                </button>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <th scope="row">{{ desk.name }}</th>
+                            <td>
+                                <button type="button" data-did="{{ desk.id }}"
+                                data-dname="{{ desk.name }}" class="btn btn-outline-secondary check_order">目前已點
+                                </button>
+                                <button type="button" data-did="{{ desk.id }}"
+                                class="btn btn-outline-secondary leave">退桌
+                                </button>
+                            </td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<div class="modal fade" tabindex="-1" role="dialog" id="order_modal">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title row">
+                <span>桌號:</span>
+                <span id="d_name"></span>
+            </div>
+
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body"></div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
+        </div>
+    </div>
+</div>
+<div class="modal fade" tabindex="-1" role="dialog" id="order_modal">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title row">
+                <span>桌號:</span>
+                <span id="d_name"></span>
+            </div>
+
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body"></div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-success">確定</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
+        </div>
     </div>
 </div>
 <script type="text/javascript">
-    $('.table-card').on('click', function () {
-        window.location = '{{ url_for("order.index") }}' + $(this).attr('data-did');
-    });
+    $('.sit').on('click', function(){
+        let d_id = $(this).attr('data-did');
+        $.ajax({
+            url: '{{ url_for("index") }}desk/sit/' + d_id,
+            type: 'POST',
+            success: function(){
+                location.reload()
+            }
+        })
+    })
+
+    $('.check_order').on('click', function(){
+        let d_id = parseInt($(this).attr('data-did'));
+        $('.modal-body').empty();
+        $('#d_name').text($(this).attr('data-dname'));
+        $.ajax({
+            url: '{{ url_for("order.check_desk_orders") }}',
+            type: 'POST',
+            contentType: "application/json",
+            dataType: 'json',
+            processData : false,
+            data: JSON.stringify({'d_id': d_id}),
+            success: function(res){
+                $.each(res['details'], function(idx, detail){
+                    $('.modal-body').append('<div class="row product-row">\
+                        <span class="col-6">'+ detail[0] +'</span>\
+                        <span class="col-2">x'+ detail[2] +'</span>\
+                        <span class="col-4 ">'+ detail[3] +'</span>\
+                    </div>')});
+                $('#order_modal').modal('show');
+            }
+        })
+    })
+
+    $('.leave').on('click', function(){
+        let d_id = parseInt($(this).attr('data-did'));
+        $('.modal-body').empty();
+        $('#d_name').text($(this).attr('data-dname'));
+        $.ajax({
+            url: '{{ url_for("order.check_desk_orders") }}',
+            type: 'POST',
+            contentType: "application/json",
+            dataType: 'json',
+            processData : false,
+            data: JSON.stringify({'d_id': d_id}),
+            success: function(res){
+                if(res['details'].length > 0){
+                    alert('此桌已點餐，請先結帳')
+                }else{
+                    $.ajax({
+                        url: '{{ url_for("index") }}desk/leave/' + d_id,
+                        type: 'POST',
+                        contentType: "application/json",
+                        dataType: 'json',
+                        processData : false,
+                        data: JSON.stringify({'d_id': d_id}),
+                        success: function(){
+                            location.reload();
+                        }
+                    })
+                }
+            }
+        })
+    })
 
 </script>
 {% endblock content%}

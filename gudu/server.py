@@ -16,15 +16,45 @@ app.register_blueprint(checkout_app, url_prefix='/checkout')
 
 db = config.db
 
+
 @app.route('/')
 @login_required
 def index(staff):
-    '''
-        regular: hopmepage > order
-        su: homepage > order, staff mgmt, prod mgmt, desk mgmt
-        all: logout in navbar
-    '''
     return render_template('homepage.html', staff=staff)
+
+
+@app.route('/desks')
+@login_required
+def desk_page(staff):
+    desks = {}
+    prefix = ['1', '2', '3', 'A', '外']
+    for p in prefix:
+        d = Desk.query.filter(Desk.name.startswith(p)).all()
+        print(d)
+        desks[p] = d
+    return render_template('desk.html', desks=desks)
+
+
+@app.route('/desk/sit/<int:id>', methods=['POST'])
+@login_required
+def sit(id, staff):
+    desk = Desk.query.get(id)
+    if not desk:
+        abort(403)
+    desk.occupied = True
+    db.session.commit()
+    return {'state': 'ok'}
+
+
+@app.route('/desk/leave/<int:id>', methods=['POST'])
+@login_required
+def leave(id, staff):
+    desk = Desk.query.get(id)
+    if not desk:
+        abort(403)
+    desk.occupied = False
+    db.session.commit()
+    return {'state': 'ok'}
 
 
 @app.route('/pos')
@@ -33,6 +63,7 @@ def index(staff):
 def pos_page(staff):
     pos_machs = POS.query.all()
     return render_template('pos.html', pos_machs=pos_machs)
+
 
 @app.route('/pos', methods=['POST'])
 @login_required
@@ -46,6 +77,7 @@ def save_pos(staff):
         p.split = pos['split']
         db.session.commit()
     return redirect(url_for('pos_page'))
+
 
 @app.template_filter('hide_null')
 def null_filter(s):
