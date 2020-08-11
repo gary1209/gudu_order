@@ -1,14 +1,63 @@
+/*// Extra small devices (portrait phones, less than 576px)
+@media (max-width: 575.98px) {
+    html{
+        font-size: 40px;
+    }
+}*/
+
+/* Large devices (desktops, 992px and up) */
 html{
-    font-size: 40px;
+    font-size: 16px;
+}
+
+/* Extra small devices (portrait phones, less than 576px) */
+@media (max-width: 575.98px){
+    html{
+        font-size: 28px;
+    }
+    table, .btn, a.nav-link{
+        font-size: 24px;
+    }
+}
+
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+    html{
+        font-size: 24px;
+    }
+    table, .btn, a.nav-link{
+        font-size: 20px;
+    }
+    .modal-footer{
+        display: flow-root;
+    }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    html{
+        font-size: 20px;
+    }
+    table{
+        font-size: 16px;
+    }
+    .modal-footer{
+        display: flow-root;
+    }
+}
+
+@media (min-width: 991.98px) {
+    .modal-footer{
+        display: flow-root;
+    }
 }
 
 body{
     background-color:white;
 }
 
-table{
-    font-size: 40px;
-}
+
+
 
 .table th, .table td{
     vertical-align: middle;
@@ -37,7 +86,7 @@ input[type=checkbox]{
 }
 
 .input-number{
-    width: 100px;
+    width: 20%;
 }
 
 .flex{
