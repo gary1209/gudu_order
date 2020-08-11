@@ -77,6 +77,7 @@
     var total_price = '{{ total_price }}';
 
     $('.checkout').on('click', function(){
+        $('.checkout').attr('disabled', true);
         let note = $('textarea').val();
         $.ajax({
             url: checkout_url,
@@ -88,7 +89,9 @@
             success: function(res){
                 console.log(res);
                 window.location.href = "{{ url_for('checkout.checkout_open_page')}}";
-
+            },
+            error: function(){
+                $('.checkout').attr('disabled', false);
             }
         })
     });

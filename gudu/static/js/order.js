@@ -85,7 +85,7 @@ $('#order').on('click', function(){
     if(!table_is_selected()){
         return;
     }
-    // [TODO] check if input value is integer
+
     $('.modal-body').empty();
     $('#order_d_name').text($('select').find('option:selected').text());
     $.each(added_products, function(key, value){
@@ -95,6 +95,7 @@ $('#order').on('click', function(){
                 <div class="btn btn-danger remove-product">x</div>\
             </div>')});
     $('#order_conf').show();
+    $('#note_row').show();
     $('#order_modal').modal('show');
 });
 
@@ -106,17 +107,21 @@ $('#order_conf').on('click', function(){
     }
     $('#order_conf').attr('disabled', true);
     let d_id = parseInt($('select').val());
+    let note = $('#note').val();
     $.ajax({
         url: order_url,
         type: 'POST',
         contentType: "application/json",
         // dataType: 'json',
         processData : false,
-        data: JSON.stringify({'d_id': d_id, 'products': added_products}),
+        data: JSON.stringify({'d_id': d_id, 'products': added_products, 'note': note}),
         success: function(res){
             console.log(res);
             alert('點餐完成');
             location.reload();
+        },
+        error: function(){
+            $('#order_conf').attr('disabled', false);
         }
     });
 });
@@ -127,6 +132,7 @@ $('#check_order').on('click', function(){
     }
     let d_id = parseInt($('select').val());
     $('.modal-body').empty();
+    $('#note_row').hide();
     $('#order_d_name').text($('select').find('option:selected').text());
     $.ajax({
         url: check_order_url,

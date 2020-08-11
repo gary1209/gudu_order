@@ -1,27 +1,23 @@
 {% extends 'product_pane_base.html' %}
 
 {% set add_cate = False %}
-{% set icon_row = False %}
+{% set icon_row = True %}
 
 {% block title_block %}
 <div style="width: 100%; height: 100%;">
-    <div style="overflow-y: overlay;">
-        <img src="{{url_for('static', filename='img/logo.png')}}" style="width: 20%; float: left;" class="homepage_btn">
+    <div style="overflow-y: overlay;" class="gray-bg">
         <div class="flex-item"> 
             <div >桌號：</div>
-            
-            <select required>
+            <select required class="form-control" style="width: auto;" >
                 <option selected="selected" disabled="true">選擇</option>
                 {% for d in desks %}
                 <option value="{{d.id}}">{{d.name}}</option>
                 {% endfor %}
             </select>
         </div>
-    </div>
-    <div style="overflow-y: overlay;">
         <div class="flex-item"> 
-            <span class="btn" id="order">確認訂單</span>
-            <span class="btn" id="check_order">本桌已點訂單</span>
+            <span class="btn btn-outline-secondary" id="order">確認訂單</span>
+            <span class="btn btn-outline-secondary" id="check_order">本桌已點訂單</span>
         </div>
     </div>
 {% endblock title_block %}
@@ -89,6 +85,10 @@
         </div>
         <div class="modal-body"></div>
         <div class="modal-footer">
+            <div id="note_row">
+                <span>備註:</span>
+                <textarea name="note" style="width: 100%;" id="note"></textarea>
+            </div>
             <button type="button" class="btn btn-primary" id="order_conf">送出</button>
             <button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
         </div>
