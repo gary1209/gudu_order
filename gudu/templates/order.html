@@ -8,11 +8,17 @@
     <div style="overflow-y: overlay;" class="gray-bg">
         <div class="flex-item"> 
             <div >桌號：</div>
+            {% if desk %}
+            <select required class="form-control" style="width: auto;" disabled="" >
+                <option selected="selected" value="{{desk.id}}">{{desk.name}}</option>
+            {% else %}
             <select required class="form-control" style="width: auto;" >
+                
                 <option selected="selected" disabled="true">選擇</option>
-                {% for d in desks %}
+                    {% for d in desks %}
                 <option value="{{d.id}}">{{d.name}}</option>
-                {% endfor %}
+                    {% endfor %}
+                {% endif %}
             </select>
         </div>
         <div class="flex-item"> 

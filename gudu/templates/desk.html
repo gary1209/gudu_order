@@ -103,7 +103,7 @@
             url: '{{ url_for("index") }}desk/sit/' + d_id,
             type: 'POST',
             success: function(){
-                location.reload()
+                window.location.href = '{{ url_for("order.order") }}/' + d_id; 
             }
         })
     })
