@@ -77,9 +77,11 @@
             url: '{{ url_for("pos_page") }}',
             type: 'POST',
             contentType: "application/json",
-            dataType: 'json',
             processData : false,
             data: JSON.stringify({'data': data}),
+            success: function(res){
+                window.location.href = '{{url_for("index")}}';
+            }
         });
     });
 </script>

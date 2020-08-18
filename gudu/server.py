@@ -30,7 +30,6 @@ def desk_page(staff):
     prefix = ['1', '2', '3', 'A', '外']
     for p in prefix:
         d = Desk.query.filter(Desk.name.startswith(p)).all()
-        print(d)
         desks[p] = d
     return render_template('desk.html', desks=desks)
 
@@ -70,13 +69,14 @@ def pos_page(staff):
 @su_required
 def save_pos(staff):
     pos_machs = request.json['data']
+
     for pos in pos_machs:
         p = POS.query.get(pos['pos_id'])
         p.ip = pos['ip']
         p.name = pos['pos_name']
         p.split = pos['split']
-        db.session.commit()
-    return redirect(url_for('pos_page'))
+    db.session.commit()
+    return {'state': 'ok'}
 
 
 @app.template_filter('hide_null')
