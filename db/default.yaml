@@ -37,26 +37,26 @@
     - name: A8
     - name: A9
     - name: A10
-    - name: 外帶1
-    - name: 外帶2
-    - name: 外帶3
-    - name: 外帶4
-    - name: 外帶5
-    - name: 外帶6
-    - name: 外帶7
-    - name: 外帶8
-    - name: 外帶9
-    - name: 外帶10
-    - name: 外帶11
-    - name: 外帶12
-    - name: 外帶13
-    - name: 外帶14
-    - name: 外帶15
-    - name: 外帶16
-    - name: 外帶17
-    - name: 外帶18
-    - name: 外帶19
-    - name: 外帶20
+    - name: 外帶 1
+    - name: 外帶 2
+    - name: 外帶 3
+    - name: 外帶 4
+    - name: 外帶 5
+    - name: 外帶 6
+    - name: 外帶 7
+    - name: 外帶 8
+    - name: 外帶 9
+    - name: 外帶 10
+    - name: 外帶 11
+    - name: 外帶 12
+    - name: 外帶 13
+    - name: 外帶 14
+    - name: 外帶 15
+    - name: 外帶 16
+    - name: 外帶 17
+    - name: 外帶 18
+    - name: 外帶 19
+    - name: 外帶 20
 
 - model: Category
   records:
@@ -96,7 +96,7 @@
       category_id: 5
       price: 160
       pos_machs: [1,3,4,5]
-    - name: 麻油藥膳正土羊鍋（配套）
+    - name: 麻油藥膳羊鍋
       category_id: 6
       price: 800
       pos_machs: [1,3,4,5]

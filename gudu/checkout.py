@@ -74,6 +74,8 @@ def checkout(d_id, staff):
     except Exception as e:
         print(e)
         return json_err('cannot add new checkout record')
+    except PrinterError as e:
+        return json_err(e)
     else:
         desk.token = None
         desk.occupied = False
@@ -101,11 +103,14 @@ def checkout_history_page(duration, staff):
         checkouts = Checkout.query.filter(Checkout.checkout_time > month_dt).all()
 
     checkout_infos = []
+    money = 0
     for c in checkouts:
+        money = money + c.total_price
         time = time_translate(c.checkout_time)
         checkout_infos.append({'desk_name': c.desk_name, 'time': time, 'token': c.token})
 
-    return render_template('checkout_history.html', type=duration, checkout_infos=checkout_infos)
+    return render_template('checkout_history.html', type=duration, money=money,
+                           checkout_infos=checkout_infos)
 
 
 @app.route('/history/info/<token>', strict_slashes=False)
@@ -120,7 +125,8 @@ def checkout_history_info_page(token, staff):
 
     for order in orders:
         time = time_translate(order.order_time)
-        detail = {'staff': order.staff.name, 'time': time, 'products': []}
+        detail = {'staff': order.staff.name, 'time': time, 'products': [],
+                  'note': order.note}
         for op in order.order_products:
             detail['products'].append((op.product, op.quantity))
         details.append(detail)
@@ -131,45 +137,64 @@ def checkout_history_info_page(token, staff):
 
 
 def print_bill(ip, uuid, time, d_name, s_name, checkout_info, check_price):
-    name_field_len = 14
+    name_field_len = 12
+    name_len_max = 6
     price_field_len = 7
     total_price_field_len = 8
 
     url = 'http://' + ip + '/cgi-bin/epos/service.cgi?devid=local_printer&timeout=10000'
-    data = ('<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">\
-                <s:Body>\
-                    <epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print">\
-                    <text lang="zh-hant"/>\
-                    <text width="2" height="2"/>\
-                    <text>桌號：'+d_name+'&#10;</text>\
-                    <text width="1" height="1"/>\
-                    <feed unit="24"/>\
-                    <text>時間：'+time+'&#10;訂單編號：'+uuid+'&#10;</text>\
-                    <text>結帳人員：'+s_name+'&#10;</text>\
-                    <text>=============================================&#10;</text>')
+    data = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">\
+<s:Body>\
+<epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print">\
+<text lang="zh-hant"/>\
+<text width="2" height="2"/>\
+<text>桌號：{}&#10;</text>\
+<text width="1" height="1"/>\
+<feed unit="24"/>\
+<text>時間：{}&#10;訂單編號：{}&#10;</text>\
+<text>結帳人員：{}&#10;</text>\
+<text>=============================================&#10;</text>\
+<text width="1" height="2"/>\
+'.format(d_name, time, uuid, s_name)
+
 
     total_quantity = 0
     for idx, order_products in enumerate(checkout_info):
         if idx is not 0:
-            data = data + '<text>---------------------------------------------&#10;</text>'
+            data = data + '<text width="1" height="1"/>\
+<text>---------------------------------------------&#10;</text>\
+<text width="1" height="2"/>'
         for order_product in order_products:
-            name = order_product.product.name
-            price = str(order_product.product.price)
-            quantity = order_product.quantity
-            total_quantity = total_quantity + quantity
-            total_price = str(order_product.product.price * quantity)
-            data = (data + '<text>' + name + ' '*(name_field_len-12) + '  '*(12-len(name))
-                    +'x '+ str(quantity)
-                    + ' '*(price_field_len-len(price)) + price
-                    + ' '*(total_price_field_len-len(total_price)) + total_price + '&#10;</text>')
+            p_name = order_product.product.name
+            price = str(order_product.product.price).rjust(price_field_len)
+            num = order_product.quantity
+            total_quantity = total_quantity + num
+            total_price = order_product.product.price * num
+            if num < 0:
+                p_name = '取消一'+p_name
+            if len(p_name) > name_len_max:
+                data = data + '<text>{name_pre}</text>\
+<text>{space}x {num}{price}{total}&#10;</text>\
+<text>{name_post}&#10;</text>\
+'.format(name_pre=p_name[:name_len_max], space='  '*6, num=num,
+         price=price, total=str(total_price).rjust(total_price_field_len), name_post=p_name[name_len_max:])
 
-    data = (data + '<text>=============================================&#10;</text>\
-                    <text>&lt;共' + str(total_quantity) + '份&gt;&#10;</text>\
-                    <text width="2" height="2"/>\
-                    <text>合計：' + str(check_price) + '&#10;</text><cut/>\
-                    </epos-print>\
-                </s:Body>\
-            </s:Envelope>')
+            else:
+                data = data + '<text>{name}</text>\
+<text>{space}x {num}{price}{total}&#10;</text>\
+'.format(name=p_name, space='  '*(name_field_len-len(p_name)), num=num, price=price,
+         total=str(total_price).rjust(total_price_field_len))
+
+    data = data + '<text width="1" height="1"/>\
+<text>=============================================&#10;</text>\
+<text width="2" height="2"/>\
+<text>&lt;共{}份&gt;&#10;</text>\
+<feed unit="24"/>\
+<text>合計：{}&#10;</text><cut/>\
+</epos-print>\
+</s:Body>\
+</s:Envelope>'.format(total_quantity, check_price)
+
 
     headers = {'Content-Type': 'text/xml; charset=utf-8', 'If-Modified-Since': 'Thu, 01 Jan 1970 00:00:00 GMT',
         'SOAPAction': '""'}
@@ -178,4 +203,4 @@ def print_bill(ip, uuid, time, d_name, s_name, checkout_info, check_price):
     if res.status_code != 200:
         tree = ElementTree.fromstring(res.content)
         status = tree[0][0].get('status')
-        # [TODO] parse error
+        raise(PrinterError(pos_error(status)))

@@ -78,6 +78,7 @@ $(document).on('click', '.remove-product', function(){
     let p_id = $(this).parent().attr('data-pid');
     console.log(p_id);
     delete added_products[p_id];
+    $("input[name='quant["+p_id+"]']").val(0).change();
     $(this).parent().remove();
 })
 
@@ -112,13 +113,17 @@ $('#order_conf').on('click', function(){
         url: order_url,
         type: 'POST',
         contentType: "application/json",
-        // dataType: 'json',
+        dataType: 'json',
         processData : false,
         data: JSON.stringify({'d_id': d_id, 'products': added_products, 'note': note}),
         success: function(res){
             console.log(res);
-            alert('點餐完成');
-            location.reload();
+            if(res['state'] == 'ok'){
+                alert('點餐完成');
+                location.reload();
+            }else{
+                alert(res['reason']);
+            }
         },
         error: function(){
             $('#order_conf').attr('disabled', false);

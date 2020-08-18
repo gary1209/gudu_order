@@ -18,6 +18,7 @@
                         <th scope="col">單價</th>
                         <th scope="col">數量</th>
                         <th scope="col">金額</th>
+                        <th scope="col">備註</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -27,21 +28,33 @@
                     <tr style="border-top: 2px dashed black;">
                         <td>{{ order_detail['time'] }}</td>
                         <td>{{ order_detail['staff'] }}</td>
-                        <th scope="row">{{ p.name }}</th>
+                        <th scope="row">
+                                {% if quantity < 0 %}
+                            <span style="color: red">【取消】</span>
+                                {% endif %}
+                            {{ p.name }}
+                        </th>
                         <td>{{ p.price }}</td>
                         <td>{{ quantity }}</td>
                         {% set price = p.price * quantity%}
                         <td>{{ price }}</td>
+                        <td>{{ order_detail['note'] }}</td>
                     </tr>
                             {% else %}
                     <tr>
                         <td></td>
                         <td></td>
-                        <th scope="row">{{ p.name }}</th>
+                        <th scope="row">
+                            {% if quantity < 0 %}
+                            <span style="color: red">【取消】</span>
+                            {% endif %}
+                            {{ p.name }}
+                        </th>
                         <td>{{ p.price }}</td>
                         <td>{{ quantity }}</td>
                         {% set price = p.price * quantity%}
                         <td>{{ price }}</td>
+                        <td></td>
                     </tr>
                             {% endif %}
                         {% endfor %}
@@ -53,6 +66,7 @@
                         <th>總金額</th>
                         <td colspan="4"></td>
                         <td>{{ total_price }}</td>
+                        <td></td>
                     </tr>
                     <tr style="height: 50px;">
                         <th>備註</th>
@@ -88,7 +102,11 @@
             data: JSON.stringify({'total_price': total_price, 'note': note}),
             success: function(res){
                 console.log(res);
-                window.location.href = "{{ url_for('checkout.checkout_open_page')}}";
+                if(res['state'] == 'ok'){
+                    window.location.href = "{{ url_for('checkout.checkout_open_page')}}";
+                }else{
+                    alert(res['reason']);
+                }
             },
             error: function(){
                 $('.checkout').attr('disabled', false);

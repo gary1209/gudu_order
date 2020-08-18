@@ -53,3 +53,29 @@ def time_translate(dt):
     local_dt = dt.astimezone(tz_utc8)
     time = local_dt.strftime("%Y/%m/%d %H:%M:%S")
     return time
+
+
+class PrinterError(Exception):
+    pass
+
+def pos_error(status):
+    mapping = {
+        0x00000001: 'No printer response',
+        0x00000004: 'Status of the drawer kick number 3 connector pin = "H"',
+        0x00000008: 'Offline status',
+        0x00000020: 'Cover is open',
+        0x00000040: 'Paper feed switch is feeding paper',
+        0x00000100: 'Waiting for online recovery',
+        0x00000200: 'Panel switch is ON',
+        0x00000400: 'Mechanical error generated',
+        0x00000800: 'Auto cutter error generated',
+        0x00002000: 'Unrecoverable error generated',
+        0x00004000: 'Auto recovery error generated',
+        0x00020000: '請換紙',
+        0x00080000: '請換紙',
+        0x80000000: 'Stop the spooler'
+    }
+    if int(status) not in mapping:
+        return 'unknown error'
+    else:
+        return mapping[status]
