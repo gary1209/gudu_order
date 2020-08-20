@@ -75,7 +75,7 @@ $('.input-number').change(function() {
 });
 
 $(document).on('click', '.remove-product', function(){
-    let p_id = $(this).parent().attr('data-pid');
+    let p_id = parseInt($(this).parent().attr('data-pid'));
     console.log(p_id);
     delete added_products[p_id];
     $("input[name='quant["+p_id+"]']").val(0).change();
@@ -97,6 +97,7 @@ $('#order').on('click', function(){
             </div>')});
     $('#order_conf').show();
     $('#note_row').show();
+    $('#order_conf').attr('disabled', false);
     $('#order_modal').modal('show');
 });
 
@@ -109,13 +110,18 @@ $('#order_conf').on('click', function(){
     $('#order_conf').attr('disabled', true);
     let d_id = parseInt($('select').val());
     let note = $('#note').val();
+    let products = []
+    $.each(added_products, function(key, value){
+        products.push({'id': parseInt(key), 'name': value['p_name'], 'num': value['num']})
+    });
+
     $.ajax({
         url: order_url,
         type: 'POST',
         contentType: "application/json",
         dataType: 'json',
         processData : false,
-        data: JSON.stringify({'d_id': d_id, 'products': added_products, 'note': note}),
+        data: JSON.stringify({'d_id': d_id, 'products': products, 'note': note}),
         success: function(res){
             console.log(res);
             if(res['state'] == 'ok'){

@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, session
+from sqlalchemy import and_
 from flask import url_for, jsonify, abort
 from uuid import uuid4
 from datetime import datetime, timezone, timedelta
@@ -44,18 +45,21 @@ def desk_order_page(d_id, staff):
 @app.route('/', methods=['POST'], strict_slashes=False)
 @login_required
 def order(staff):
+    '''
+        products: [{
+            'id': product.id,
+            'num': quantity
+        }, ...]
+    '''
     d_id = request.json['d_id']
     products = request.json['products']
     note = request.json['note']
 
     desk = Desk.query.get(d_id)
-    uuid = None
-    order_time = datetime.utcnow()
-    dt = order_time.replace(tzinfo=timezone.utc)
-    tz_utc8 = timezone(timedelta(hours=8))
-    local_dt = dt.astimezone(tz_utc8)
-    time = local_dt.strftime("%Y/%m/%d %H:%M:%S")
+    if not desk:
+        abort(403)
 
+    uuid = None
     if not desk.token:
         uuid = uuid4().hex[:12]
         desk.token = uuid
@@ -63,19 +67,44 @@ def order(staff):
         db.session.commit()
     else:
         uuid = desk.token
+
+    # check number of cancel products
+    cancel_products = list(filter(lambda x: x['num'] < 0, products))
+    cancel_pid = list(map(lambda x: int(x['id']), cancel_products))
+    error_info = {}
+    # 計算每個要取消的商品，之前已經被這組客人點過幾個
+    for order in desk.orders:
+        for op in order.order_products:
+            p_id = op.product.id
+            if p_id in cancel_pid:
+                if p_id in error_info:
+                    error_info[p_id] = error_info[p_id] + op.quantity
+                else:
+                    error_info[p_id] = op.quantity
+    msg = ''
+    for p_id in error_info:
+        info = list(filter(lambda x: x['id'] is p_id, cancel_products))[0]
+        cancel_num = info['num']
+        num = error_info[p_id]
+        if cancel_num + num < 0:
+            msg = msg + '{}目前共點{}個，不可取消{}個\n'.format(info['name'], num, abs(cancel_num))
+    if len(msg) > 0:
+        return json_err(msg)
+
+    order_time = datetime.utcnow()
+    time = time_translate(order_time)
     order = Order(staff=staff, desk=desk, token=uuid,
                   order_time=order_time, note=note)
     db.session.add(order)
 
     pos_infos = {}
-
     pos_machs = POS.query.filter(POS.ip != '').all()
     for pos in pos_machs:
         pos_infos[pos.id] = {'ip': pos.ip, 'split': pos.split, 'note': note, 'products': []}
 
-    for p_id in products:
-        product = Product.query.get(p_id)
-        quantity = products[p_id]['num']
+    for p in products:
+        product = Product.query.get(p['id'])
+        quantity = p['num']
 
         for pos_id in product.pos_machs:
             if pos_id in pos_infos:
@@ -86,7 +115,6 @@ def order(staff):
         order_product.order = order
         db.session.add(order_product)
 
-    print(pos_infos)
     exceptions = []
     new_loop = asyncio.new_event_loop()
     asyncio.set_event_loop(new_loop)
@@ -118,8 +146,6 @@ async def send_req(ip, data):
     f = partial(requests.post, url, data=data.encode(), headers=headers)
     loop = asyncio.get_event_loop()
     res = await loop.run_in_executor(None, f)
-    print(res)
-    print(res.status_code)
     if res.status_code != 200:
         tree = ElementTree.fromstring(res.content)
         status = tree[0][0].get('status')
