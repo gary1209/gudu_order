@@ -94,8 +94,8 @@ def checkout_history_page(duration, staff):
         today_dt = datetime.strptime(today, "%Y-%m-%d")
         checkouts = Checkout.query.filter(Checkout.checkout_time > today_dt).all()
     elif duration == 'week':
-        week = now.strftime("%Y %W")
-        week_dt = datetime.strptime(week, "%Y %W")
+        week = now.strftime("%Y-%W")
+        week_dt = datetime.strptime(week+'-1', "%Y-%W-%w")
         checkouts = Checkout.query.filter(Checkout.checkout_time > week_dt).all()
     else:
         month = now.strftime("%Y-%m")
@@ -121,7 +121,7 @@ def checkout_history_info_page(token, staff):
     s_name = Staff.query.get(checkout.staff_id).name
     orders = Order.query.filter(Order.token == token).all()
     details = []
-    time = time_translate(checkout.checkout_time)
+    checkout_time = time_translate(checkout.checkout_time)
 
     for order in orders:
         time = time_translate(order.order_time)
@@ -133,7 +133,7 @@ def checkout_history_info_page(token, staff):
 
     return render_template('checkout_history_info.html', d_name=checkout.desk_name, s_name=s_name,
                            details=details, total_price=checkout.total_price,
-                           note=checkout.note, time=time)
+                           note=checkout.note, time=checkout_time)
 
 
 def print_bill(ip, uuid, time, d_name, s_name, checkout_info, check_price):
