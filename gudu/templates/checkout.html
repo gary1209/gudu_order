@@ -23,40 +23,39 @@
                 </thead>
                 <tbody>
                     {% for order_detail in details %}
-                        {% for (p, quantity) in order_detail['products'] %}
+                        {% for op in order_detail['order_products'] %}
+
                             {% if loop.index == 1 %}
                     <tr style="border-top: 2px dashed black;">
                         <td>{{ order_detail['time'] }}</td>
                         <td>{{ order_detail['staff'] }}</td>
-                        <th scope="row">
-                                {% if quantity < 0 %}
-                            <span style="color: red">【取消】</span>
-                                {% endif %}
-                            {{ p.name }}
-                        </th>
-                        <td>{{ p.price }}</td>
-                        <td>{{ quantity }}</td>
-                        {% set price = p.price * quantity%}
-                        <td>{{ price }}</td>
-                        <td>{{ order_detail['note'] }}</td>
-                    </tr>
+
                             {% else %}
                     <tr>
                         <td></td>
                         <td></td>
+
+                            {% endif %}
+                            
                         <th scope="row">
-                            {% if quantity < 0 %}
+                                {% if op.quantity < 0 %}
                             <span style="color: red">【取消】</span>
-                            {% endif %}
-                            {{ p.name }}
+                                {% endif %}
+                            {{ op.product_name }}
                         </th>
-                        <td>{{ p.price }}</td>
-                        <td>{{ quantity }}</td>
-                        {% set price = p.price * quantity%}
+                        <td>{{ op.product_price }}</td>
+                        <td>{{ op.quantity }}</td>
+                        {% set price = op.product_price * op.quantity%}
                         <td>{{ price }}</td>
+
+                            {% if loop.index == 1 %}
+                        <td>{{ order_detail['note'] }}</td>
+
+                            {% else %}
                         <td></td>
-                    </tr>
+
                             {% endif %}
+                    </tr>
                         {% endfor %}
                     {% endfor %}
 
@@ -65,7 +64,7 @@
                     <tr style="border-top: 2px solid black;">
                         <th>總金額</th>
                         <td colspan="4"></td>
-                        <td>{{ total_price }}</td>
+                        <td>{{ desk.price }}</td>
                         <td></td>
                     </tr>
                     <tr style="height: 50px;">
@@ -88,7 +87,6 @@
 <script type="text/javascript">
     var d_id = '{{ desk.id }}';
     var checkout_url = '{{ url_for("checkout.checkout_open_page") }}' + d_id;
-    var total_price = '{{ total_price }}';
 
     $('.checkout').on('click', function(){
         $('.checkout').attr('disabled', true);
@@ -99,13 +97,14 @@
             contentType: "application/json",
             dataType: 'json',
             processData : false,
-            data: JSON.stringify({'total_price': total_price, 'note': note}),
+            data: JSON.stringify({'note': note}),
             success: function(res){
                 console.log(res);
                 if(res['state'] == 'ok'){
                     window.location.href = "{{ url_for('checkout.checkout_open_page')}}";
                 }else{
                     alert(res['reason']);
+                    $('.checkout').attr('disabled', false);
                 }
             },
             error: function(){

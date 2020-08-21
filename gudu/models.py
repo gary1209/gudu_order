@@ -39,6 +39,11 @@ class Desk(db.Model):
     def is_occupied(self):
         return self.occupied is True
 
+    @property
+    def price(self):
+        return sum(list(map(lambda x: x.order_price, self.orders)))
+
+
 
 class Category(db.Model):
     __tablename__ = 'Category'
@@ -76,7 +81,7 @@ class Order(db.Model):
     # 一張單的金額
     @property
     def order_price(self):
-        return OrderProduct.total_price(order=self)
+        return sum(list(map(lambda x: x.price, self.order_products)))
 
     # # 同組客人所有單的金額
     # @classmethod
@@ -91,17 +96,15 @@ class OrderProduct(db.Model):
     order_id = db.Column(db.Integer, db.ForeignKey('Order.id'), primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey('Product.id'), primary_key=True)
     quantity = db.Column(db.Integer, nullable=False)
+    product_name = db.Column(db.String(45), nullable=False)
+    product_price = db.Column(db.Integer, nullable=False)
 
     product = db.relationship(Product, backref="order_products")
     order = db.relationship(Order, backref="order_products")
 
-    @classmethod
-    def total_price(cls, order):
-        records = cls.query.filter(cls.order == order).all()
-        if len(records) != 0:
-            return sum(list(map(lambda x: x.product.price * x.quantity, records)))
-        else:
-            return 0
+    @property
+    def price(self):
+        return self.product_price * self.quantity
 
 
 # 結帳時才有這筆紀錄

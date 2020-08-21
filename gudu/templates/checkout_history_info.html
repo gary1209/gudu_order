@@ -7,7 +7,7 @@
     <div class="flex">
         <div>
             <div class="align-center flex-item" style="margin: 20 0 20 0">
-                <h5 style="margin-right: 30px;">桌號：{{ d_name }}</h5>
+                <h5 style="margin-right: 30px;">桌號：{{ checkout.desk_name }}</h5>
                 <h5>結帳人員：{{ s_name }}</h5>
             </div>
             <div class="align-center flex-item" style="margin: 20 0 20 0">
@@ -27,41 +27,39 @@
                 </thead>
                 <tbody>
                     {% for order_detail in details %}
-                        {% for (p, quantity) in order_detail['products'] %}
-                            {% if loop.index == 1 %}
+                        {% for op in order_detail['order_products'] %}
 
+                            {% if loop.index == 1 %}
                     <tr style="border-top: 2px dashed black;">
                         <td>{{ order_detail['time'] }}</td>
                         <td>{{ order_detail['staff'] }}</td>
-                        <th scope="row">
-                                {% if quantity < 0 %}
-                            <span style="color: red">【取消】</span>
-                                {% endif %}
-                            {{ p.name }}
-                        </th>
-                        <td>{{ p.price }}</td>
-                        <td>{{ quantity }}</td>
-                        {% set price = p.price * quantity%}
-                        <td>{{ price }}</td>
-                        <td>{{ order_detail['note'] }}</td>
-                    </tr>
+
                             {% else %}
                     <tr>
                         <td></td>
                         <td></td>
+
+                            {% endif %}
+
                         <th scope="row">
-                            {% if quantity < 0 %}
+                                {% if op.quantity < 0 %}
                             <span style="color: red">【取消】</span>
-                            {% endif %}
-                            {{ p.name }}
+                                {% endif %}
+                            {{ op.product_name }}
                         </th>
-                        <td>{{ p.price }}</td>
-                        <td>{{ quantity }}</td>
-                        {% set price = p.price * quantity%}
+                        <td>{{ op.product_price }}</td>
+                        <td>{{ op.quantity }}</td>
+                        {% set price = op.product_price * op.quantity%}
                         <td>{{ price }}</td>
+
+                            {% if loop.index == 1 %}
+                        <td>{{ order_detail['note'] }}</td>
+
+                            {% else %}
                         <td></td>
-                    </tr>
+
                             {% endif %}
+                    </tr>
                         {% endfor %}
                     {% endfor %}
                 </tbody>
@@ -69,12 +67,12 @@
                     <tr style="border-top: 2px solid black;">
                         <th>總金額</th>
                         <td colspan="4"></td>
-                        <td>{{ total_price }}</td>
+                        <td>{{ checkout.total_price }}</td>
                         <td></td>
                     </tr>
                     <tr style="height: 50px;">
                         <th>備註</th>
-                        <td colspan="6">{{ note }}</td>
+                        <td colspan="6">{{ checkout.note }}</td>
                     </tr>
                     <tr>
                         <td colspan="7">

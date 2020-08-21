@@ -110,7 +110,9 @@ def order(staff):
             if pos_id in pos_infos:
                 pos_infos[pos_id]['products'].append([product.name, product.price, quantity])
 
-        order_product = OrderProduct(quantity=quantity)
+        order_product = OrderProduct(quantity=quantity,
+                                     product_name=product.name,
+                                     product_price=product.price)
         order_product.product = product
         order_product.order = order
         db.session.add(order_product)
@@ -166,7 +168,7 @@ def check_desk_orders(staff):
 
     for order in orders:
         for op in order.order_products:
-            details.append((op.product.name, op.product.price, op.quantity, op.product.price*op.quantity))
+            details.append((op.product_name, op.product_price, op.quantity, op.price))
 
     return {'details': details}
 

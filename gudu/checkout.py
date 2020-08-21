@@ -31,23 +31,21 @@ def checkout_page(d_id, staff):
     token = desk.token
     orders = desk.orders
     details = []
-    total_price = 0
     for order in orders:
         time = time_translate(order.order_time)
-        detail = {'staff': order.staff.name, 'time': time, 'products': []}
-        for op in order.order_products:
-            detail['products'].append((op.product, op.quantity))
-            total_price = total_price + op.quantity * op.product.price
-        details.append(detail)
+        details.append({
+            'staff': order.staff.name,
+            'time': time,
+            'order_products': order.order_products
+        })
 
-    return render_template('checkout.html', desk=desk, total_price=total_price, details=details)
+    return render_template('checkout.html', desk=desk, details=details)
 
 
 @app.route('/<int:d_id>', methods=['POST'], strict_slashes=False)
 @login_required
 @su_required
 def checkout(d_id, staff):
-    check_price = request.json['total_price']
     note = request.json['note']
 
     desk = Desk.query.get(d_id)
@@ -64,12 +62,12 @@ def checkout(d_id, staff):
         checkout_info.append(order_products)
 
     try:
-        checkout = Checkout(token=uuid, staff=staff, total_price=check_price,
+        checkout = Checkout(token=uuid, staff=staff, total_price=desk.price,
                             note=note, desk_name=desk.name)
         db.session.add(checkout)
         ip = POS.query.get(1).ip
         # only pos machine at the checkout counter prints the checkout info
-        print_bill(ip, uuid, time, desk.name, staff.name, checkout_info, check_price)
+        print_bill(ip, uuid, time, desk.name, staff.name, checkout_info, desk.price)
         db.session.commit()
     except Exception as e:
         print(e)
@@ -125,15 +123,15 @@ def checkout_history_info_page(token, staff):
 
     for order in orders:
         time = time_translate(order.order_time)
-        detail = {'staff': order.staff.name, 'time': time, 'products': [],
-                  'note': order.note}
-        for op in order.order_products:
-            detail['products'].append((op.product, op.quantity))
-        details.append(detail)
+        details.append({
+            'staff': order.staff.name,
+            'time': time,
+            'order_products': order.order_products,
+            'note': order.note})
 
-    return render_template('checkout_history_info.html', d_name=checkout.desk_name, s_name=s_name,
-                           details=details, total_price=checkout.total_price,
-                           note=checkout.note, time=checkout_time)
+    return render_template('checkout_history_info.html',
+                           checkout=checkout, time=checkout_time,
+                           s_name=s_name, details=details)
 
 
 def print_bill(ip, uuid, time, d_name, s_name, checkout_info, check_price):
@@ -164,12 +162,12 @@ def print_bill(ip, uuid, time, d_name, s_name, checkout_info, check_price):
             data = data + '<text width="1" height="1"/>\
 <text>---------------------------------------------&#10;</text>\
 <text width="1" height="2"/>'
-        for order_product in order_products:
-            p_name = order_product.product.name
-            price = str(order_product.product.price).rjust(price_field_len)
-            num = order_product.quantity
+        for op in order_products:
+            p_name = op.product_name
+            price = str(op.product_price).rjust(price_field_len)
+            num = op.quantity
+            total_price = op.price
             total_quantity = total_quantity + num
-            total_price = order_product.product.price * num
             if num < 0:
                 p_name = '取消一'+p_name
             if len(p_name) > name_len_max:
@@ -177,13 +175,13 @@ def print_bill(ip, uuid, time, d_name, s_name, checkout_info, check_price):
 <text>{space}x {num}{price}{total}&#10;</text>\
 <text>{name_post}&#10;</text>\
 '.format(name_pre=p_name[:name_len_max], space='  '*6, num=num,
-         price=price, total=str(total_price).rjust(total_price_field_len), name_post=p_name[name_len_max:])
+         price=price, total=str(op.price).rjust(total_price_field_len), name_post=p_name[name_len_max:])
 
             else:
                 data = data + '<text>{name}</text>\
 <text>{space}x {num}{price}{total}&#10;</text>\
 '.format(name=p_name, space='  '*(name_field_len-len(p_name)), num=num, price=price,
-         total=str(total_price).rjust(total_price_field_len))
+         total=str(op.price).rjust(total_price_field_len))
 
     data = data + '<text width="1" height="1"/>\
 <text>=============================================&#10;</text>\

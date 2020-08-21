@@ -129,6 +129,7 @@ $('#order_conf').on('click', function(){
                 location.reload();
             }else{
                 alert(res['reason']);
+                $('#order_modal').modal('hide');
             }
         },
         error: function(){
