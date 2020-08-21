@@ -58,24 +58,28 @@ def time_translate(dt):
 class PrinterError(Exception):
     pass
 
+
+mapping = {
+    0x00000001: 'No printer response\n',
+    0x00000004: 'Status of the drawer kick number 3 connector pin = "H"\n',
+    0x00000008: 'Offline status\n',
+    0x00000020: 'Cover is open\n',
+    0x00000040: 'Paper feed switch is feeding paper\n',
+    0x00000100: 'Waiting for online recovery\n',
+    0x00000200: 'Panel switch is ON\n',
+    0x00000400: 'Mechanical error generated\n',
+    0x00000800: 'Auto cutter error generated\n',
+    0x00002000: 'Unrecoverable error generated\n',
+    0x00004000: 'Auto recovery error generated\n',
+    0x00020000: '請換紙\n',
+    0x00080000: '請換紙\n',
+    0x80000000: 'Stop the spooler\n'
+}
+
+
 def pos_error(status):
-    mapping = {
-        0x00000001: 'No printer response',
-        0x00000004: 'Status of the drawer kick number 3 connector pin = "H"',
-        0x00000008: 'Offline status',
-        0x00000020: 'Cover is open',
-        0x00000040: 'Paper feed switch is feeding paper',
-        0x00000100: 'Waiting for online recovery',
-        0x00000200: 'Panel switch is ON',
-        0x00000400: 'Mechanical error generated',
-        0x00000800: 'Auto cutter error generated',
-        0x00002000: 'Unrecoverable error generated',
-        0x00004000: 'Auto recovery error generated',
-        0x00020000: '請換紙',
-        0x00080000: '請換紙',
-        0x80000000: 'Stop the spooler'
-    }
-    if int(status) not in mapping:
-        return 'unknown error'
-    else:
-        return mapping[status]
+    msg = ''
+    for i in mapping:
+        if i & int(status):
+            msg = msg + mapping[i]
+    return msg

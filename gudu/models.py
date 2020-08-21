@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 
-
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.associationproxy import association_proxy
 from config import config
@@ -44,7 +43,6 @@ class Desk(db.Model):
         return sum(list(map(lambda x: x.order_price, self.orders)))
 
 
-
 class Category(db.Model):
     __tablename__ = 'Category'
     id = db.Column(db.Integer, primary_key=True, nullable=False)
@@ -60,9 +58,9 @@ class Product(db.Model):
     price = db.Column(db.Integer, nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('Category.id'))
     available = db.Column(db.Boolean, default=True)
-    pos_machs = db.Column(db.JSON)
 
     orders = association_proxy("order_products", "order")
+    poss = association_proxy("pos_products", "pos")
 
 
 class Order(db.Model):
@@ -82,12 +80,6 @@ class Order(db.Model):
     @property
     def order_price(self):
         return sum(list(map(lambda x: x.price, self.order_products)))
-
-    # # 同組客人所有單的金額
-    # @classmethod
-    # def total_price(cls, token):
-    #     orders = cls.query.filter(cls.token == token).all()
-    #     return sum(list(map(lambda x: x.order_price, orders))) 
 
 
 # this is for the many-to-many relationship between product and order
@@ -115,7 +107,7 @@ class Checkout(db.Model):
     staff_id = db.Column(db.Integer, db.ForeignKey('Staff.id'), nullable=False)
     desk_name = db.Column(db.String(45), nullable=False)
     total_price = db.Column(db.Integer, nullable=False)
-    note = db.Column(db.String) 
+    note = db.Column(db.String)
 
 
 class POS(db.Model):
@@ -124,3 +116,16 @@ class POS(db.Model):
     name = db.Column(db.String(45))
     ip = db.Column(db.String(27))
     split = db.Column(db.Boolean, default=False)
+    error = db.Column(db.String(60))
+
+    products = association_proxy("pos_products", "product")
+
+
+# this is for the many-to-many relationship between product and pos
+class PosProduct(db.Model):
+    __tablename__ = 'PosProduct'
+    pos_id = db.Column(db.Integer, db.ForeignKey('POS.id'), primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('Product.id'), primary_key=True)
+
+    product = db.relationship(Product, backref="pos_products")
+    pos = db.relationship(POS, backref="pos_products")

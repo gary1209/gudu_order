@@ -2,13 +2,11 @@ from flask import Blueprint, render_template, request, redirect, session
 from flask import url_for, jsonify, abort
 
 from config import config
-from models import Product, Category, OrderProduct
+from models import Product, Category, OrderProduct, POS, PosProduct
 from utils import login_required, su_required, json_err
 
 app = Blueprint('product', __name__)
 db = config.db
-
-# [TODO]如果還有單沒結帳就改商品價格，舊訂單會套用到新價格
 
 
 @app.route('/', methods=['GET'], strict_slashes=False)
@@ -41,7 +39,9 @@ def product_info(p_id, staff):
     if not product:
         abort(403)
     categories = Category.query.order_by(Category.id).all()
-    return render_template('product.html', product=product, categories=categories)
+    poss = list(map(lambda x: x.id, product.poss))
+    return render_template('product.html', product=product,
+                           categories=categories, poss=poss)
 
 
 @app.route('/<int:p_id>', methods=['POST'], strict_slashes=False)
@@ -68,16 +68,37 @@ def save_product(p_id, staff):
         product.name = p_name
         product.price = price
         product.category = category
-        product.pos_machs = pos_machs
         product.available = available
         db.session.commit()
+
+        for pp in product.pos_products:
+            if pp.pos.id not in pos_machs:
+                db.session.delete(pp)
+                db.session.commit()
+
+        for id in pos_machs:
+            pos = POS.query.get(id)
+            if pos not in product.poss:
+                pos_product = PosProduct()
+                pos_product.pos = pos
+                pos_product.product = product
+                db.session.add(pos_product)
+        db.session.commit()
+
     else:
         category = Category.query.get(c_id)
         if not category:
             abort(403)
-        product = Product(name=p_name, price=price, pos_machs=pos_machs, available=available)
+        product = Product(name=p_name, price=price, available=available)
         product.category = category
         db.session.add(product)
+        db.session.commit()
+        for id in pos_machs:
+            pos = POS.query.get(id)
+            pos_product = PosProduct()
+            pos_product.pos = pos
+            pos_product.product = product
+            db.session.add(pos_product)
         db.session.commit()
 
     return {'state': 'ok', 'category': c_id}
