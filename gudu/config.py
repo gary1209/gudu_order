@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+import yaml
 
 class Config():
     _host = '0.0.0.0'
@@ -6,7 +7,8 @@ class Config():
     _debug = True
     _db = None
     _app = None
-
+    _order_pos_working = False
+    _checkout_pos_working = False
 
     @property
     def db(self):
@@ -47,4 +49,27 @@ class Config():
         return self._debug
 
 
+    def read_config(self):
+        with open('status.yaml') as f:
+            for x in yaml.load(f):
+                if 'order_pos_working' in x:
+                    self._order_pos_working = x['order_pos_working']
+
+    @property
+    def order_pos_working(self):
+        return self._order_pos_working
+
+    @order_pos_working.setter
+    def order_pos_working(self, val):
+        self._order_pos_working = val
+
+    @property
+    def checkout_pos_working(self):
+        return self._checkout_pos_working
+
+    @checkout_pos_working.setter
+    def checkout_pos_working(self, val):
+        self._checkout_pos_working = val
+
 config = Config()
+config.read_config()

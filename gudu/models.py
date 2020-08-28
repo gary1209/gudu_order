@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.associationproxy import association_proxy
 from config import config
+from sqlalchemy import and_
 
 db = config.db
 
@@ -75,6 +76,7 @@ class Order(db.Model):
     note = db.Column(db.String)
 
     products = association_proxy("order_products", "product")
+    fails = db.relationship('PrintFailed', backref='order')
 
     # 一張單的金額
     @property
@@ -108,6 +110,11 @@ class Checkout(db.Model):
     desk_name = db.Column(db.String(45), nullable=False)
     total_price = db.Column(db.Integer, nullable=False)
     note = db.Column(db.String)
+    printed = db.Column(db.Boolean, default=True)
+
+    @classmethod
+    def all_printed(cls):
+        return len(cls.query.filter_by(printed=False).all()) == 0
 
 
 class POS(db.Model):
@@ -119,6 +126,11 @@ class POS(db.Model):
     error = db.Column(db.String(60))
 
     products = association_proxy("pos_products", "product")
+    fails = db.relationship('PrintFailed', backref='pos')
+
+    @classmethod
+    def order_pos_all_working(cls):
+        return len(cls.query.filter(and_(cls.id != 1, cls.error != '')).all()) == 0
 
 
 # this is for the many-to-many relationship between product and pos
@@ -129,3 +141,11 @@ class PosProduct(db.Model):
 
     product = db.relationship(Product, backref="pos_products")
     pos = db.relationship(POS, backref="pos_products")
+
+
+class PrintFailed(db.Model):
+    __tablename__ = 'PrintFailed'
+    __table_args__ = (db.UniqueConstraint('pos_id', 'order_id'),)
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    pos_id = db.Column(db.Integer, db.ForeignKey('POS.id'))
+    order_id = db.Column(db.Integer, db.ForeignKey('Order.id'))

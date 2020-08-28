@@ -100,10 +100,20 @@
         </div>
     </div>
 </div>
+
 <script type="text/javascript">
     var order_url = '{{ url_for("order.order") }}';
     var check_order_url = '{{ url_for("order.check_desk_orders") }}';
+    var error_page_url = '{{ url_for("error_page") }}';
 </script>
 <script src="{{url_for('static', filename='js/order.js') }}"></script>
+
+{% if not pos_working %}
+<script type="text/javascript">
+    if(!confirm('目前POS機有錯，確定繼續點餐嗎？')){
+        window.location.href = '{{ url_for("index") }}';
+    }
+</script>
+{% endif %}
 
 {% endblock pane_content%}

@@ -130,6 +130,9 @@ $('#order_conf').on('click', function(){
             }else{
                 alert(res['reason']);
                 $('#order_modal').modal('hide');
+                if(res['state'] == 'printer error'){
+                    window.location.href = error_page_url;
+                }
             }
         },
         error: function(){

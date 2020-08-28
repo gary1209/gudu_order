@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% set icon_row = True %}
+
+{% block content %}
+<div style="width: 100%; height: 100%">
+    <div class="flex">
+        <div>
+            <table class="table " style="text-align: center;">
+                <thead>
+                    <tr>
+                        <th colspan="4">POS 機錯誤</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for p in pos %}
+                <tr>
+                    <th scope="row">{{ p.id }} </th>
+                    <td>{{ p.name }}</td>
+                    <td>{{ p.ip }}</td>
+                    <td style="white-space:pre-wrap;">{{ p.error }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4">
+                            <button type="button" class="btn btn-outline-secondary" id="fix">修復</button>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        </div>
+    
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#fix').on('click', function(){
+        $('#fix').attr('disabled', true);
+        $.ajax({
+            url: '{{ url_for("error_page") }}',
+            type: 'POST',
+            contentType: "application/json",
+            success: function(res){
+                if(res.state != 'ok'){
+                    location.reload()
+                }else{
+                    window.location.href = '{{ url_for("index") }}'
+                }
+            }
+        })
+    })
+</script>
+
+{% endblock content %}

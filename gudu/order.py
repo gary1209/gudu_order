@@ -10,9 +10,9 @@ import xml.etree.ElementTree as ET
 
 
 from config import config
-from models import Order, Desk, Product, Category, OrderProduct, Checkout, POS
+from models import Order, Desk, Product, Category, OrderProduct, Checkout, POS, PrintFailed
 from utils import login_required, su_required, json_err, time_translate
-from utils import pos_error, PrinterError
+from utils import pos_error, save_printer_status, print_order_format
 
 app = Blueprint('order', __name__)
 db = config.db
@@ -27,7 +27,7 @@ def order_page(staff):
         _cate[c] = c.products
 
     desks = Desk.query.all()
-    return render_template('order.html', categories=_cate, desks=desks)
+    return render_template('order.html', categories=_cate, desks=desks, pos_working=POS.order_pos_all_working())
 
 
 @app.route('/<int:d_id>', methods=['GET'], strict_slashes=False)
@@ -41,7 +41,7 @@ def desk_order_page(d_id, staff):
     desk = Desk.query.get(d_id)
     if not desk:
         abort(404)
-    return render_template('order.html', categories=_cate, desk=desk)
+    return render_template('order.html', categories=_cate, desk=desk, pos_working=POS.order_pos_all_working())
 
 
 @app.route('/', methods=['POST'], strict_slashes=False)
@@ -99,12 +99,22 @@ def order(staff):
                   order_time=order_time, note=note)
     db.session.add(order)
 
+    for p in products:
+        product = Product.query.get(p['id'])
+        order_product = OrderProduct(quantity=p['num'],
+                                     product_name=product.name,
+                                     product_price=product.price)
+        order_product.product = product
+        order_product.order = order
+        db.session.add(order_product)
+        db.session.commit()
+
+    order = Order.query.filter_by(staff=staff, desk=desk, token=uuid).first()
     new_loop = asyncio.new_event_loop()
     asyncio.set_event_loop(new_loop)
     loop = asyncio.get_event_loop()
     tasks = []
     for pos in POS.query.filter(and_(POS.ip != '', POS.id != 1)).all():
-        print(pos)
 
         data = []
         for p in products:
@@ -113,47 +123,55 @@ def order(staff):
                 quantity = p['num']
                 data.append([product.name, product.price, quantity])
         if len(data) > 0:
-            _format = print_format(uuid, time, desk.name, staff.name,
+            _format = print_order_format(uuid, time, desk.name, staff.name,
                                    pos.split, note, data)
-            tasks.append(loop.create_task(send_req(pos.ip, _format)))
+            tasks.append(loop.create_task(send_req(order, pos, _format)))
 
     try:
         loop.run_until_complete(asyncio.gather(*tasks))
     except Exception as e:
         return json_err(str(e))
     finally:
-        for p in products:
-            product = Product.query.get(p['id'])
-            order_product = OrderProduct(quantity=quantity,
-                                         product_name=product.name,
-                                         product_price=product.price)
-            order_product.product = product
-            order_product.order = order
-            db.session.add(order_product)
-            db.session.commit()
+        config.order_pos_working = POS.order_pos_all_working()
+        save_printer_status(dict(order_pos_working=POS.order_pos_all_working()))
+        if config.order_pos_working is False:
+            msg = ""
+            for pos in POS.query.filter(and_(POS.ip != '', POS.id != 1, POS.error != "")).all():
+                msg = msg + 'POS機 id:{} ip:{} \n錯誤:{}'.format(pos.id, pos.ip, pos.error)
+            return {'state': 'printer error', 'reason': msg}
+
         loop.close()
 
     return {'state': 'ok'}
 
 
-async def send_req(ip, data):
+async def send_req(order, pos, data):
+    ip = pos.ip
     url = 'http://' + ip + '/cgi-bin/epos/service.cgi?devid=local_printer&timeout=10000'
     headers = {'Content-Type': 'text/xml; charset=utf-8',
                'If-Modified-Since': 'Thu, 01 Jan 1970 00:00:00 GMT',
                'SOAPAction': '""'}
     f = partial(requests.post, url, data=data.encode(), headers=headers)
     loop = asyncio.get_event_loop()
-    res = await loop.run_in_executor(None, f)
+    try:
+        res = await loop.run_in_executor(None, f)
+    except (Exception, OSError) as e:
+        pos.error = str(e)
+        db.session.commit()
     if res.status_code is 200:
         tree = ET.fromstring(res.content)
         success = tree[0][0].get('success')
         if success is not 'false':
             status = tree[0][0].get('status')
-            if status is not 2:
-                pos = POS.query.filter(POS.ip==ip).first()
+            if not int(status) & 2:
                 pos.error = pos_error(status)
-                # # [TODO] 印失敗的存進db
-                # raise(PrinterError('POS機 ip:{} 錯誤:{}'.format(ip, pos_error(status))))
+                fail = PrintFailed()
+                fail.order = order
+                fail.pos = pos
+                db.session.add(fail)
+            else:
+                pos.error = ""
+        db.session.commit()
 
 
 @app.route('/check', methods=['POST'], strict_slashes=False)
@@ -173,83 +191,3 @@ def check_desk_orders(staff):
             details.append((op.product_name, op.product_price, op.quantity, op.price))
 
     return {'details': details}
-
-
-def print_format(uuid, time, d_name, s_name, split, note, data):
-    name_field_len = 12
-    name_len_max = 6
-    price_field_len = 7
-    total_price_field_len = 8
-
-    msg = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">\
-<s:Body>\
-<epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print">\
-<text lang="zh-hant"/>'
-
-    if split:
-        for info in data:
-            p_name = info[0]
-            num = info[2]
-            if num > 0:
-                for count in range(info[2]):
-                    msg = msg + '<text width="2" height="2"/>\
-<text>桌號：{}&#10;</text>\
-<feed unit="24"/>\
-<text>{}x1&#10;</text><cut/>'.format(d_name, p_name.ljust(name_field_len))
-            else:
-                msg = msg + '<text width="2" height="2"/>\
-<text>桌號：{}&#10;</text>\
-<feed unit="24"/>\
-<text>（取消）{}x{}&#10;</text><cut/>'.format(d_name, p_name.ljust(8), abs(num))
-
-    else:
-        msg = msg + '<text width="2" height="2"/>\
-<text>桌號：{}&#10;</text>\
-<text width="1" height="1"/>\
-<feed unit="24"/>\
-<text>時間：{}&#10;訂單編號：{}&#10;</text>\
-<text>開單人員：{}&#10;</text>\
-<text>---------------------------------------------&#10;</text>\
-<text width="1" height="2"/>\
-'.format(d_name, time, uuid, s_name)
-
-        total_quantity = 0
-        order_price = 0
-        for info in data:
-            p_name = info[0]
-            num = info[2]
-            price = str(info[1]).rjust(price_field_len)
-            total_price = info[1] * num
-            total_quantity = total_quantity + num
-            order_price = order_price + total_price
-
-            if num < 0:
-                p_name = '取消一'+p_name
-
-            if len(p_name) > name_len_max:
-                msg = msg + '<text>{name_pre}</text>\
-<text>{space}x {num}{price}{total}&#10;</text>\
-<text>{name_post}&#10;</text>\
-'.format(name_pre=p_name[:name_len_max], space='  '*6, num=num,
-         price=price, total=str(total_price).rjust(total_price_field_len), name_post=p_name[name_len_max:])
-
-            else:
-                msg = msg + '<text>{name}</text>\
-<text>{space}x {num}{price}{total}&#10;</text>\
-'.format(name=p_name, space='  '*(name_field_len-len(p_name)), num=num, price=price,
-         total=str(total_price).rjust(total_price_field_len))
-
-        msg = msg + '<text width="1" height="1"/>\
-<text>---------------------------------------------&#10;</text>\
-<text width="2" height="2"/>\
-<text>備註：{}&#10;</text>\
-<feed unit="24"/>\
-<text>&lt;共{}份&gt;&#10;</text>\
-<feed unit="24"/>\
-<text>小計：{}&#10;</text>\
-<cut/>'.format(note, total_quantity, order_price)
-
-    msg = msg + '</epos-print>\
-            </s:Body>\
-        </s:Envelope>'
-    return msg

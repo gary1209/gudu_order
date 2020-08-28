@@ -103,8 +103,12 @@
                 if(res['state'] == 'ok'){
                     window.location.href = "{{ url_for('checkout.checkout_open_page')}}";
                 }else{
-                    alert(res['reason']);
-                    $('.checkout').attr('disabled', false);
+                    if(res['state'] == 'printer error'){
+                        window.location.href = '{{ url_for("error_page") }}';
+                    }else{
+                        alert(res['reason']);
+                        $('.checkout').attr('disabled', false);
+                    }
                 }
             },
             error: function(){
@@ -117,4 +121,11 @@
         window.location.href = "{{ url_for('checkout.checkout_open_page')}}"
     });
 </script>
+{% if not pos_working %}
+<script type="text/javascript">
+    if(!confirm('目前POS機有錯，確定繼續結帳嗎？')){
+        window.location.href = '{{ url_for("index") }}';
+    }
+</script>
+{% endif %}
 {% endblock content%}

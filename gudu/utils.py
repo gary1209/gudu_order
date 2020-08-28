@@ -4,7 +4,9 @@ from flask import session, request, redirect, url_for, abort, jsonify
 from datetime import datetime, timezone, timedelta
 
 from models import Staff
+from config import config
 
+import yaml
 
 def login_required(f):
     '''
@@ -55,10 +57,6 @@ def time_translate(dt):
     return time
 
 
-class PrinterError(Exception):
-    pass
-
-
 mapping = {
     0x00000001: 'No printer response\n',
     0x00000004: 'Status of the drawer kick number 3 connector pin = "H"\n',
@@ -82,4 +80,166 @@ def pos_error(status):
     for i in mapping:
         if i & int(status):
             msg = msg + mapping[i]
+    return msg
+
+
+def save_printer_status(data):
+    with open('../status.yaml', 'w') as f:
+        yaml.dump(data, f)
+
+
+def print_order_format(uuid, time, d_name, s_name, split, note, data, reprint=False):
+    name_field_len = 12
+    name_len_max = 6
+    price_field_len = 7
+    total_price_field_len = 8
+
+    reprint_hint = '《補印》&#10;' if reprint else ''
+
+    msg = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">\
+<s:Body>\
+<epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print">\
+<text lang="zh-hant"/>'
+    if split:
+        for info in data:
+            p_name = info[0]
+            num = info[2]
+            if num > 0:
+                for count in range(info[2]):
+                    msg = msg + '<text width="1" height="1"/>\
+<feed unit="24"/>\
+<text>時間：{}&#10;訂單編號：{}&#10;</text>\
+<text>開單人員：{}&#10;</text>\
+<text width="2" height="2"/>\
+<text>{}</text>\
+<feed unit="24"/>\
+<text>桌號：{}&#10;</text>\
+<feed unit="24"/>\
+<text>{}x1&#10;</text><cut/>'.format(time, uuid, s_name, reprint_hint, d_name, p_name.ljust(name_field_len))
+            else:
+                msg = msg + '<text width="1" height="1"/>\
+<feed unit="24"/>\
+<text>時間：{}&#10;訂單編號：{}&#10;</text>\
+<text>開單人員：{}&#10;</text>\
+<text width="2" height="2"/>\
+<text>{}</text>\
+<feed unit="24"/>\
+<text>桌號：{}&#10;</text>\
+<feed unit="24"/>\
+<text>（取消）{}x{}&#10;</text><cut/>'.format(time, uuid, s_name, reprint_hint, d_name, p_name.ljust(8), abs(num))
+
+    else:
+        msg = msg + '<text width="2" height="2"/>\
+<text>{}</text>\
+<text>桌號：{}&#10;</text>\
+<text width="1" height="1"/>\
+<feed unit="24"/>\
+<text>時間：{}&#10;訂單編號：{}&#10;</text>\
+<text>開單人員：{}&#10;</text>\
+<text>---------------------------------------------&#10;</text>\
+<text width="1" height="2"/>\
+'.format(reprint_hint, d_name, time, uuid, s_name)
+
+        total_quantity = 0
+        order_price = 0
+        for info in data:
+            p_name = info[0]
+            num = info[2]
+            price = str(info[1]).rjust(price_field_len)
+            total_price = info[1] * num
+            total_quantity = total_quantity + num
+            order_price = order_price + total_price
+
+            if num < 0:
+                p_name = '取消一'+p_name
+
+            if len(p_name) > name_len_max:
+                msg = msg + '<text>{name_pre}</text>\
+<text>{space}x {num}{price}{total}&#10;</text>\
+<text>{name_post}&#10;</text>\
+'.format(name_pre=p_name[:name_len_max], space='  '*6, num=num,
+         price=price, total=str(total_price).rjust(total_price_field_len), name_post=p_name[name_len_max:])
+
+            else:
+                msg = msg + '<text>{name}</text>\
+<text>{space}x {num}{price}{total}&#10;</text>\
+'.format(name=p_name, space='  '*(name_field_len-len(p_name)), num=num, price=price,
+         total=str(total_price).rjust(total_price_field_len))
+
+        msg = msg + '<text width="1" height="1"/>\
+<text>---------------------------------------------&#10;</text>\
+<text width="2" height="2"/>\
+<text>備註：{}&#10;</text>\
+<feed unit="24"/>\
+<text>&lt;共{}份&gt;&#10;</text>\
+<feed unit="24"/>\
+<text>小計：{}&#10;</text>\
+<cut/>'.format(note, total_quantity, order_price)
+
+    msg = msg + '</epos-print>\
+            </s:Body>\
+        </s:Envelope>'
+    return msg
+
+
+def print_bill_format(uuid, time, d_name, s_name, checkout_info, check_price, reprint=False):
+    name_field_len = 12
+    name_len_max = 6
+    price_field_len = 7
+    total_price_field_len = 8
+    reprint_hint = '《補印》&#10;' if reprint else ''
+
+    msg = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">\
+<s:Body>\
+<epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print">\
+<text lang="zh-hant"/>\
+<text width="2" height="2"/>\
+<text>{}</text>\
+<feed unit="24"/>\
+<text>桌號：{}&#10;</text>\
+<text width="1" height="1"/>\
+<feed unit="24"/>\
+<text>時間：{}&#10;訂單編號：{}&#10;</text>\
+<text>結帳人員：{}&#10;</text>\
+<text>=============================================&#10;</text>\
+<text width="1" height="2"/>\
+'.format(reprint_hint, d_name, time, uuid, s_name)
+
+
+    total_quantity = 0
+    for idx, order_products in enumerate(checkout_info):
+        if idx is not 0:
+            msg = msg + '<text width="1" height="1"/>\
+<text>---------------------------------------------&#10;</text>\
+<text width="1" height="2"/>'
+        for op in order_products:
+            p_name = op.product_name
+            price = str(op.product_price).rjust(price_field_len)
+            num = op.quantity
+            total_price = op.price
+            total_quantity = total_quantity + num
+            if num < 0:
+                p_name = '取消一'+p_name
+            if len(p_name) > name_len_max:
+                msg = msg + '<text>{name_pre}</text>\
+<text>{space}x {num}{price}{total}&#10;</text>\
+<text>{name_post}&#10;</text>\
+'.format(name_pre=p_name[:name_len_max], space='  '*6, num=num,
+         price=price, total=str(op.price).rjust(total_price_field_len), name_post=p_name[name_len_max:])
+
+            else:
+                msg = msg + '<text>{name}</text>\
+<text>{space}x {num}{price}{total}&#10;</text>\
+'.format(name=p_name, space='  '*(name_field_len-len(p_name)), num=num, price=price,
+         total=str(op.price).rjust(total_price_field_len))
+
+    msg = msg + '<text width="1" height="1"/>\
+<text>=============================================&#10;</text>\
+<text width="2" height="2"/>\
+<text>&lt;共{}份&gt;&#10;</text>\
+<feed unit="24"/>\
+<text>合計：{}&#10;</text><cut/>\
+</epos-print>\
+</s:Body>\
+</s:Envelope>'.format(total_quantity, check_price)
     return msg

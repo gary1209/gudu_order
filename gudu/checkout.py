@@ -2,10 +2,12 @@ from flask import Blueprint, render_template, request, redirect, session
 from flask import url_for, jsonify, abort
 from uuid import uuid4
 from datetime import datetime
+import xml.etree.ElementTree as ET
 
 from config import config
 from models import Order, Desk, Product, Category, OrderProduct, Checkout, Staff, POS
 from utils import login_required, su_required, json_err, time_translate
+from utils import pos_error, save_printer_status, print_bill_format
 import requests
 
 app = Blueprint('checkout', __name__)
@@ -39,7 +41,8 @@ def checkout_page(d_id, staff):
             'order_products': order.order_products
         })
 
-    return render_template('checkout.html', desk=desk, details=details)
+    pos_working = config.checkout_pos_working
+    return render_template('checkout.html', desk=desk, details=details, pos_working=pos_working)
 
 
 @app.route('/<int:d_id>', methods=['POST'], strict_slashes=False)
@@ -61,23 +64,22 @@ def checkout(d_id, staff):
         order_products = order.order_products
         checkout_info.append(order_products)
 
-    try:
-        checkout = Checkout(token=uuid, staff=staff, total_price=desk.price,
+    checkout = Checkout(token=uuid, staff=staff, total_price=desk.price,
                             note=note, desk_name=desk.name)
-        db.session.add(checkout)
-        ip = POS.query.get(1).ip
+    try:
+        pos = POS.query.get(1)
         # only pos machine at the checkout counter prints the checkout info
-        print_bill(ip, uuid, time, desk.name, staff.name, checkout_info, desk.price)
-        db.session.commit()
+        print_bill(pos, checkout, checkout_info, desk.price)
     except Exception as e:
-        print(e)
-        return json_err('cannot add new checkout record')
-    except PrinterError as e:
-        return json_err(e)
-    else:
+        checkout.printed = False
+        return json_err(str(e))
+    finally:
+        db.session.add(checkout)
         desk.token = None
         desk.occupied = False
         db.session.commit()
+    if not config.checkout_pos_working:
+        return {'state': 'printer error'}
     return {'state': 'ok'}
 
 
@@ -134,71 +136,36 @@ def checkout_history_info_page(token, staff):
                            s_name=s_name, details=details)
 
 
-def print_bill(ip, uuid, time, d_name, s_name, checkout_info, check_price):
-    name_field_len = 12
-    name_len_max = 6
-    price_field_len = 7
-    total_price_field_len = 8
+def print_bill(pos, checkout, checkout_info, check_price):
+    uuid = checkout.token
+    time = checkout.checkout_time
+    d_name = checkout.desk_name
+    s_name = checkout.staff.name
 
-    url = 'http://' + ip + '/cgi-bin/epos/service.cgi?devid=local_printer&timeout=10000'
-    data = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">\
-<s:Body>\
-<epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print">\
-<text lang="zh-hant"/>\
-<text width="2" height="2"/>\
-<text>桌號：{}&#10;</text>\
-<text width="1" height="1"/>\
-<feed unit="24"/>\
-<text>時間：{}&#10;訂單編號：{}&#10;</text>\
-<text>結帳人員：{}&#10;</text>\
-<text>=============================================&#10;</text>\
-<text width="1" height="2"/>\
-'.format(d_name, time, uuid, s_name)
+    data = print_bill_format(uuid, time, d_name, s_name, checkout_info, check_price)
 
-
-    total_quantity = 0
-    for idx, order_products in enumerate(checkout_info):
-        if idx is not 0:
-            data = data + '<text width="1" height="1"/>\
-<text>---------------------------------------------&#10;</text>\
-<text width="1" height="2"/>'
-        for op in order_products:
-            p_name = op.product_name
-            price = str(op.product_price).rjust(price_field_len)
-            num = op.quantity
-            total_price = op.price
-            total_quantity = total_quantity + num
-            if num < 0:
-                p_name = '取消一'+p_name
-            if len(p_name) > name_len_max:
-                data = data + '<text>{name_pre}</text>\
-<text>{space}x {num}{price}{total}&#10;</text>\
-<text>{name_post}&#10;</text>\
-'.format(name_pre=p_name[:name_len_max], space='  '*6, num=num,
-         price=price, total=str(op.price).rjust(total_price_field_len), name_post=p_name[name_len_max:])
-
-            else:
-                data = data + '<text>{name}</text>\
-<text>{space}x {num}{price}{total}&#10;</text>\
-'.format(name=p_name, space='  '*(name_field_len-len(p_name)), num=num, price=price,
-         total=str(op.price).rjust(total_price_field_len))
-
-    data = data + '<text width="1" height="1"/>\
-<text>=============================================&#10;</text>\
-<text width="2" height="2"/>\
-<text>&lt;共{}份&gt;&#10;</text>\
-<feed unit="24"/>\
-<text>合計：{}&#10;</text><cut/>\
-</epos-print>\
-</s:Body>\
-</s:Envelope>'.format(total_quantity, check_price)
-
-
+    url = 'http://' + pos.ip + '/cgi-bin/epos/service.cgi?devid=local_printer&timeout=10000'
     headers = {'Content-Type': 'text/xml; charset=utf-8', 'If-Modified-Since': 'Thu, 01 Jan 1970 00:00:00 GMT',
         'SOAPAction': '""'}
-    res = requests.post(url, data=data.encode(), headers=headers)
-    print(res.status_code)
-    if res.status_code != 200:
-        tree = ElementTree.fromstring(res.content)
-        status = tree[0][0].get('status')
-        raise(PrinterError(pos_error(status)))
+    try:
+        res = requests.post(url, data=data.encode(), headers=headers)
+    except (Exception, OSError) as e:
+        config.checkout_pos_working = False
+        save_printer_status(dict(checkout_pos_working=config.checkout_pos_working))
+        pos.error = str(e)
+        db.session.commit()
+
+    if res.status_code is 200:
+        tree = ET.fromstring(res.content)
+        success = tree[0][0].get('success')
+        if success is not 'false':
+            status = tree[0][0].get('status')
+            if not int(status) & 2:
+                config.checkout_pos_working = False
+                checkout.printed = False
+                pos.error = pos_error(status)
+            else:
+                config.checkout_pos_working = True
+                pos.error = ""
+            save_printer_status(dict(checkout_pos_working=config.checkout_pos_working))
+        db.session.commit()
