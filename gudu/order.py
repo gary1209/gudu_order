@@ -22,26 +22,28 @@ db = config.db
 @login_required
 def order_page(staff):
     categories = Category.query.order_by(Category.id).all()
-    _cate = {}
+    _cate = []
     for c in categories:
-        _cate[c] = c.products
+        _cate.append((c, c.products))
 
     desks = Desk.query.all()
-    return render_template('order.html', categories=_cate, desks=desks, pos_working=POS.order_pos_all_working())
+    return render_template('order.html', categories=categories,
+        info=_cate, desks=desks, pos_working=POS.order_pos_all_working())
 
 
 @app.route('/<int:d_id>', methods=['GET'], strict_slashes=False)
 @login_required
 def desk_order_page(d_id, staff):
     categories = Category.query.order_by(Category.id).all()
-    _cate = {}
+    _cate = []
     for c in categories:
-        _cate[c] = c.products
+        _cate.append((c, c.products))
 
     desk = Desk.query.get(d_id)
     if not desk:
         abort(404)
-    return render_template('order.html', categories=_cate, desk=desk, pos_working=POS.order_pos_all_working())
+    return render_template('order.html', categories=categories,
+        info=_cate, desk=desk, pos_working=POS.order_pos_all_working())
 
 
 @app.route('/', methods=['POST'], strict_slashes=False)

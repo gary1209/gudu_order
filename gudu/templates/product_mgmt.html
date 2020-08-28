@@ -6,7 +6,8 @@
 {% block pane_content %}
     <div class="flex" style="background-color: white;">
         <div class="tab-content flex-item" style="display: inline-block;">
-            {% for c in categories %}
+            {% for data in info %}
+                {% set c = data[0] %}
                 {% if loop.index == 1%}
             <div class="tab-pane show active" id="content-{{c.id}}" role="tabpanel" aria-labelledby="tab-{{c.id}}">
                 {% else %}
@@ -15,7 +16,7 @@
 
                 <table class="table table-borderless" style="text-align: center;">
                     <tbody>
-                {% for p in categories[c] %}
+                {% for p in data[1] %}
                         <tr>
                             <th scope="row">{{ p.name }}</th>
                             <td>
@@ -58,11 +59,11 @@
 
     $('.edit-product').on('click', function(){
         let p_id = $(this).attr('data-pid');
-        window.location.href = '{{ url_for("product.mgmt_page") }}/' + p_id;
+        window.location.href = '{{ url_for("product.mgmt_page") }}' + p_id;
     });
 
     $('.new-product').on('click', function(){
-        window.location.href = '{{ url_for("product.mgmt_page") }}/create/'+$(this).attr('data-cid');
+        window.location.href = '{{ url_for("product.mgmt_page") }}create/'+$(this).attr('data-cid');
     })
 </script>
 {% endblock pane_content%}

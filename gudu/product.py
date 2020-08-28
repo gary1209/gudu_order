@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, session
 from flask import url_for, jsonify, abort
+import operator
 
 from config import config
 from models import Product, Category, OrderProduct, POS, PosProduct
@@ -14,10 +15,10 @@ db = config.db
 @su_required
 def mgmt_page(staff):
     categories = Category.query.order_by(Category.id).all()
-    _cate = {}
+    _cate = []
     for c in categories:
-        _cate[c] = c.products
-    return render_template('product_mgmt.html', categories=_cate)
+        _cate.append((c, c.products))
+    return render_template('product_mgmt.html', categories=categories, info=_cate)
 
 
 @app.route('/category', methods=['POST'], strict_slashes=False)

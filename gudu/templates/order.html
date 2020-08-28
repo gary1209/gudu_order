@@ -31,7 +31,8 @@
 {% block pane_content %}
     <div class="flex" style="background-color: white;">
         <div class="tab-content flex-item" style="display: inline-block;">
-            {% for c in categories %}
+            {% for data in info %}
+                {% set c = data[0] %}
                 {% if loop.index == 1%}
             <div class="tab-pane show active" id="content-{{c.id}}" role="tabpanel" aria-labelledby="tab-{{c.id}}">
                 {% else %}
@@ -40,7 +41,7 @@
 
                 <table class="table table-borderless" style="text-align: center;">
                     <tbody>
-                {% for p in categories[c] %}
+                {% for p in data[1] %}
                         <tr data-pid="{{ p.id }}" data-pname="{{ p.name }}">
                     {% if p.available == 1 %}
                             <th scope="row">{{ p.name }}</th>
