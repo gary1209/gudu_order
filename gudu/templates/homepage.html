@@ -9,6 +9,7 @@
         <div class="border border-dark rounded">
             <div class="align-center"><a href="{{ url_for('desk_page')}}">座位表</a></div>
             <div class="align-center"><a href="{{ url_for('order.order_page')}}">點餐</a></div>
+            <div class="align-center"><a href="{{ url_for('error_page')}}">POS機修復</a></div>
             {% if staff.is_superuser %}
             <div class="align-center"><a href="{{ url_for('product.mgmt_page')}}">商品管理</a></div>
             <div class="align-center"><a href="{{ url_for('account.list_page')}}">人員管理</a></div>
