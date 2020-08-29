@@ -84,7 +84,7 @@ def pos_error(status):
 
 
 def save_printer_status(data):
-    with open('../status.yaml', 'w') as f:
+    with open('status.yaml', 'w') as f:
         yaml.dump(data, f)
 
 
