@@ -41,6 +41,9 @@
                             <th scope="row">{{ desk.name }}</th>
                             <td>
                                 <button type="button" data-did="{{ desk.id }}"
+                                data-dname="{{ desk.name }}" class="btn btn-outline-secondary order">加點
+                                </button>
+                                <button type="button" data-did="{{ desk.id }}"
                                 data-dname="{{ desk.name }}" class="btn btn-outline-secondary check_order">目前已點
                                 </button>
                                 <button type="button" data-did="{{ desk.id }}"
@@ -106,6 +109,11 @@
                 window.location.href = '{{ url_for("order.order") }}/' + d_id; 
             }
         })
+    })
+
+    $('.order').on('click', function(){
+        let d_id = $(this).attr('data-did');
+        window.location.href = '{{ url_for("order.order") }}/' + d_id;
     })
 
     $('.check_order').on('click', function(){
