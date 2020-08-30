@@ -107,7 +107,9 @@ def fix_pos_error(staff):
         loop.run_until_complete(asyncio.gather(*tasks))
     finally:
         config.order_pos_working = POS.order_pos_all_working()
-        save_printer_status(config.order_pos_working)
+        save_printer_status({'order_pos_working': config.order_pos_working,
+            'checkout_pos_working': config.checkout_pos_working
+        })
         if config.order_pos_working is False:
             return {'state': 'error'}
         else:
@@ -159,7 +161,7 @@ def fix_pos_error(staff):
 
 async def send_req(pos, data=None, order=None, checkout=None):
     ip = pos.ip
-    url = 'http://' + ip + '/cgi-bin/epos/service.cgi?devid=local_printer&timeout=10000'
+    url = 'http://' + ip + '/cgi-bin/epos/service.cgi?devid=local_printer&timeout=30000'
     headers = {'Content-Type': 'text/xml; charset=utf-8',
                'If-Modified-Since': 'Thu, 01 Jan 1970 00:00:00 GMT',
                'SOAPAction': '""'}

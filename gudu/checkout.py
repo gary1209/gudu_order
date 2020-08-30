@@ -146,14 +146,15 @@ def print_bill(pos, checkout, checkout_info, check_price):
 
     data = print_bill_format(uuid, time, d_name, s_name, checkout_info, check_price)
 
-    url = 'http://' + pos.ip + '/cgi-bin/epos/service.cgi?devid=local_printer&timeout=10000'
+    url = 'http://' + pos.ip + '/cgi-bin/epos/service.cgi?devid=local_printer&timeout=30000'
     headers = {'Content-Type': 'text/xml; charset=utf-8', 'If-Modified-Since': 'Thu, 01 Jan 1970 00:00:00 GMT',
         'SOAPAction': '""'}
     try:
         res = requests.post(url, data=data.encode(), headers=headers)
     except (Exception, OSError) as e:
         config.checkout_pos_working = False
-        save_printer_status(dict(checkout_pos_working=config.checkout_pos_working))
+        save_printer_status(dict(checkout_pos_working=config.checkout_pos_working, 
+            order_pos_working=config.order_pos_working))
         pos.error = str(e)
         db.session.commit()
 
@@ -169,5 +170,6 @@ def print_bill(pos, checkout, checkout_info, check_price):
             else:
                 config.checkout_pos_working = True
                 pos.error = ""
-            save_printer_status(dict(checkout_pos_working=config.checkout_pos_working))
+            save_printer_status(dict(checkout_pos_working=config.checkout_pos_working, 
+                order_pos_working=config.order_pos_working))
         db.session.commit()

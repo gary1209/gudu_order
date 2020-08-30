@@ -1,2 +1,2 @@
-- order_pos_working: True
-- checkout_pos_working: True
+checkout_pos_working: true
+order_pos_working: true

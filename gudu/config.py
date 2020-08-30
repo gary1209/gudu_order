@@ -51,9 +51,11 @@ class Config():
 
     def read_config(self):
         with open('status.yaml') as f:
-            for x in yaml.load(f):
-                if 'order_pos_working' in x:
-                    self._order_pos_working = x['order_pos_working']
+            x = yaml.load(f)
+            if 'order_pos_working' in x:
+                self._order_pos_working = x['order_pos_working']
+            if 'checkout_pos_working' in x:
+                self._checkout_pos_working = x['checkout_pos_working']
 
     @property
     def order_pos_working(self):

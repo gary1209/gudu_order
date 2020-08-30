@@ -136,7 +136,8 @@ def order(staff):
         return json_err(str(e))
     finally:
         config.order_pos_working = POS.order_pos_all_working()
-        save_printer_status(dict(order_pos_working=POS.order_pos_all_working()))
+        save_printer_status(dict(order_pos_working=POS.order_pos_all_working(),
+            checkout_pos_working=config.checkout_pos_working))
         if config.order_pos_working is False:
             msg = ""
             for pos in POS.query.filter(and_(POS.ip != '', POS.id != 1, POS.error != "")).all():
@@ -150,7 +151,7 @@ def order(staff):
 
 async def send_req(order, pos, data):
     ip = pos.ip
-    url = 'http://' + ip + '/cgi-bin/epos/service.cgi?devid=local_printer&timeout=10000'
+    url = 'http://' + ip + '/cgi-bin/epos/service.cgi?devid=local_printer&timeout=30000'
     headers = {'Content-Type': 'text/xml; charset=utf-8',
                'If-Modified-Since': 'Thu, 01 Jan 1970 00:00:00 GMT',
                'SOAPAction': '""'}
