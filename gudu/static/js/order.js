@@ -167,5 +167,12 @@ $('#check_order').on('click', function(){
             $('#order_modal').modal('show');
         }
     })
+})
 
+$('#add_spice').on('click', function(){
+    $('#note').val($('#note').val()+'加辣');
+})
+
+$('#no_spice').on('click', function(){
+    $('#note').val($('#note').val()+'不辣');
 })
