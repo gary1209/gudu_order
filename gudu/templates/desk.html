@@ -9,9 +9,9 @@
         {% for data in desks %}
         <li class="nav-item" role="presentation">
             {% if loop.index == 1%}
-            <a class="nav-link active" id="tab-{{data}}" data-toggle="tab" href="#content-{{data}}" role="tab" aria-controls="content-{{data}}" aria-selected="true">{{ data }}</a>
+            <a class="nav-link active" id="tab-{{data[0]}}" data-toggle="tab" href="#content-{{data[0]}}" role="tab" aria-controls="content-{{data[0]}}" aria-selected="true">{{ data[0] }}</a>
             {% else %}
-            <a class="nav-link" id="tab-{{data}}" data-toggle="tab" href="#content-{{data}}" role="tab" aria-controls="content-{{data}}" aria-selected="false">{{ data }}</a>
+            <a class="nav-link" id="tab-{{data[0]}}" data-toggle="tab" href="#content-{{data[0]}}" role="tab" aria-controls="content-{{data[0]}}" aria-selected="false">{{ data[0] }}</a>
             {% endif %}
         </li>
         {% endfor %}
@@ -20,14 +20,14 @@
         <div class="tab-content flex-item" style="display: inline-block;">
             {% for data in desks %}
                 {% if loop.index == 1%}
-            <div class="tab-pane show active" id="content-{{data}}" role="tabpanel" aria-labelledby="tab-{{data}}">
+            <div class="tab-pane show active" id="content-{{data[0]}}" role="tabpanel" aria-labelledby="tab-{{data[0]}}">
                 {% else %}
-            <div class="tab-pane" id="content-{{data}}" role="tabpanel" aria-labelledby="tab-{{data}}">
+            <div class="tab-pane" id="content-{{data[0]}}" role="tabpanel" aria-labelledby="tab-{{data[0]}}">
                 {% endif %}
 
                 <table class="table table-borderless" style="text-align: center;">
                     <tbody>
-                {% for desk in desks[data] %}
+                {% for desk in data[1] %}
                     {% if not desk.is_occupied %}
                         <tr>
                             <th scope="row">{{ desk.name }}</th>

@@ -37,7 +37,7 @@ def desk_page(staff):
     for p in prefix:
         d = Desk.query.filter(Desk.name.startswith(p)).all()
         desks[p] = d
-    return render_template('desk.html', desks=desks, staff=staff)
+    return render_template('desk.html', desks=sorted(desks.items()), staff=staff)
 
 
 @app.route('/desk/sit/<int:id>', methods=['POST'])
