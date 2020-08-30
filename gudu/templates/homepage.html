@@ -23,11 +23,12 @@
 </div>
 <script type="text/javascript">
     $('.logout').on('click', function(){
+        event.preventDefault();
         $.ajax({
             url: '{{url_for("account.logout")}}',
             type: 'POST',
-            success: function(){
-                window.location.href = '{{ url_for("index") }}'
+            success: function(res){
+                window.location.href = '{{ url_for("index") }}';
             }
         })
     })
