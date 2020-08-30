@@ -104,29 +104,17 @@ def print_order_format(uuid, time, d_name, s_name, split, note, data, reprint=Fa
         for info in data:
             p_name = info[0]
             num = info[2]
-            if num > 0:
-                for count in range(info[2]):
-                    msg = msg + '<text width="1" height="1"/>\
-<feed unit="24"/>\
-<text>時間：{}&#10;訂單編號：{}&#10;</text>\
-<text>開單人員：{}&#10;</text>\
-<text width="2" height="2"/>\
+            if num < 0:
+                p_name = '（取消）' + p_name
+            msg = msg + '<text width="2" height="2"/>\
 <text>{}</text>\
 <feed unit="24"/>\
 <text>桌號：{}&#10;</text>\
 <feed unit="24"/>\
-<text>{}x1&#10;</text><cut/>'.format(time, uuid, s_name, reprint_hint, d_name, p_name.ljust(name_field_len))
-            else:
-                msg = msg + '<text width="1" height="1"/>\
+<text>{}x{}&#10;</text>\
 <feed unit="24"/>\
-<text>時間：{}&#10;訂單編號：{}&#10;</text>\
-<text>開單人員：{}&#10;</text>\
-<text width="2" height="2"/>\
-<text>{}</text>\
-<feed unit="24"/>\
-<text>桌號：{}&#10;</text>\
-<feed unit="24"/>\
-<text>（取消）{}x{}&#10;</text><cut/>'.format(time, uuid, s_name, reprint_hint, d_name, p_name.ljust(8), abs(num))
+<text>備註：{}&#10;</text>\
+<cut/>'.format(reprint_hint, d_name, p_name.ljust(name_field_len), abs(num), note)
 
     else:
         msg = msg + '<text width="2" height="2"/>\
