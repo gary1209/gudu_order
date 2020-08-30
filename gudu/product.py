@@ -18,7 +18,8 @@ def mgmt_page(staff):
     _cate = []
     for c in categories:
         _cate.append((c, c.products))
-    return render_template('product_mgmt.html', categories=categories, info=_cate)
+    return render_template('product_mgmt.html', categories=categories,
+        info=_cate, staff=staff)
 
 
 @app.route('/category', methods=['POST'], strict_slashes=False)
@@ -42,7 +43,7 @@ def product_info(p_id, staff):
     categories = Category.query.order_by(Category.id).all()
     poss = list(map(lambda x: x.id, product.poss))
     return render_template('product.html', product=product,
-                           categories=categories, poss=poss)
+                           categories=categories, poss=poss, staff=staff)
 
 
 @app.route('/<int:p_id>', methods=['POST'], strict_slashes=False)
@@ -111,4 +112,5 @@ def save_product(p_id, staff):
 def create_product_page(c_id, staff):
     # categories = Category.query.all()
     category = Category.query.get(c_id)
-    return render_template('product.html', product={'pos_machs': [1]}, selected_category=category)
+    return render_template('product.html', product={'pos_machs': [1]}, 
+        selected_category=category, staff=staff)

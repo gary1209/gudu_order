@@ -22,7 +22,7 @@ def checkout_open_page(staff):
     desks_info = []
     for d in desks:
         desks_info.append({'d_id': d.id, 'd_name': d.name})
-    return render_template('checkout_open.html', desks_info=desks_info)
+    return render_template('checkout_open.html', desks_info=desks_info, staff=staff)
 
 
 @app.route('/<int:d_id>', strict_slashes=False)
@@ -38,11 +38,13 @@ def checkout_page(d_id, staff):
         details.append({
             'staff': order.staff.name,
             'time': time,
-            'order_products': order.order_products
+            'order_products': order.order_products,
+            'note': order.note
         })
 
     pos_working = config.checkout_pos_working
-    return render_template('checkout.html', desk=desk, details=details, pos_working=pos_working)
+    return render_template('checkout.html', desk=desk, details=details,
+        pos_working=pos_working, staff=staff)
 
 
 @app.route('/<int:d_id>', methods=['POST'], strict_slashes=False)
@@ -110,7 +112,7 @@ def checkout_history_page(duration, staff):
         checkout_infos.append({'desk_name': c.desk_name, 'time': time, 'token': c.token})
 
     return render_template('checkout_history.html', type=duration, money=money,
-                           checkout_infos=checkout_infos)
+                           checkout_infos=checkout_infos, staff=staff)
 
 
 @app.route('/history/info/<token>', strict_slashes=False)
@@ -133,7 +135,7 @@ def checkout_history_info_page(token, staff):
 
     return render_template('checkout_history_info.html',
                            checkout=checkout, time=checkout_time,
-                           s_name=s_name, details=details)
+                           s_name=s_name, details=details, staff=staff)
 
 
 def print_bill(pos, checkout, checkout_info, check_price):

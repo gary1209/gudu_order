@@ -33,11 +33,11 @@ def index(staff):
 @login_required
 def desk_page(staff):
     desks = {}
-    prefix = ['1', '2', '3', 'A', '外']
+    prefix = ['0', '1', '2', '3', '5', '6', '外']
     for p in prefix:
         d = Desk.query.filter(Desk.name.startswith(p)).all()
         desks[p] = d
-    return render_template('desk.html', desks=desks)
+    return render_template('desk.html', desks=desks, staff=staff)
 
 
 @app.route('/desk/sit/<int:id>', methods=['POST'])
@@ -67,7 +67,7 @@ def leave(id, staff):
 @su_required
 def pos_page(staff):
     pos_machs = POS.query.all()
-    return render_template('pos.html', pos_machs=pos_machs)
+    return render_template('pos.html', pos_machs=pos_machs, staff=staff)
 
 
 @app.route('/pos', methods=['POST'])
@@ -89,7 +89,7 @@ def save_pos(staff):
 @login_required
 def error_page(staff):
     pos_machs = POS.query.filter(POS.error != "").all()
-    return render_template('pos_error.html', pos=pos_machs)
+    return render_template('pos_error.html', pos=pos_machs, staff=staff)
 
 
 @app.route('/pos/fix', methods=['POST'])

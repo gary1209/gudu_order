@@ -45,9 +45,11 @@ def logout():
 
 
 @app.route('/list_page', methods=['GET'])
-def list_page():
+@login_required
+@su_required
+def list_page(staff):
     staffs = Staff.query.order_by(Staff.suspended, Staff.id).all()
-    return render_template('account_list.html', staffs=staffs)
+    return render_template('account_list.html', staffs=staffs, staff=staff)
 
 
 @app.route('/register', methods=['POST'])

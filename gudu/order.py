@@ -28,7 +28,7 @@ def order_page(staff):
 
     desks = Desk.query.all()
     return render_template('order.html', categories=categories,
-        info=_cate, desks=desks, pos_working=POS.order_pos_all_working())
+        info=_cate, desks=desks, pos_working=POS.order_pos_all_working(), staff=staff)
 
 
 @app.route('/<int:d_id>', methods=['GET'], strict_slashes=False)
@@ -42,8 +42,9 @@ def desk_order_page(d_id, staff):
     desk = Desk.query.get(d_id)
     if not desk:
         abort(404)
-    return render_template('order.html', categories=categories,
-        info=_cate, desk=desk, pos_working=POS.order_pos_all_working())
+    desks = Desk.query.all()
+    return render_template('order.html', categories=categories, staff=staff,
+        info=_cate, desk=desk, desks=desks, pos_working=POS.order_pos_all_working())
 
 
 @app.route('/', methods=['POST'], strict_slashes=False)
