@@ -1,18 +1,20 @@
 - model: Desk
   records:
+    - name: '01'
+    - name: '02'
+    - name: '03'
+    - name: '05'
+    - name: '06'
+    - name: '07'
+    - name: '08'
+    - name: '09'
+    - name: 10
     - name: 11
     - name: 12
     - name: 13
-    - name: 14
-    - name: 15
-    - name: 16
-    - name: 17
-    - name: 18
-    - name: 19
     - name: 21
     - name: 22
     - name: 23
-    - name: 24
     - name: 25
     - name: 26
     - name: 27
@@ -21,22 +23,20 @@
     - name: 31
     - name: 32
     - name: 33
-    - name: 34
     - name: 35
     - name: 36
     - name: 37
     - name: 38
-    - name: 39
-    - name: A1
-    - name: A2
-    - name: A3
-    - name: A4
-    - name: A5
-    - name: A6
-    - name: A7
-    - name: A8
-    - name: A9
-    - name: A10
+    - name: 51
+    - name: 52
+    - name: 53
+    - name: 55
+    - name: 56
+    - name: 57
+    - name: 58
+    - name: 59
+    - name: 60
+    - name: 61
     - name: 外帶 1
     - name: 外帶 2
     - name: 外帶 3
@@ -46,17 +46,6 @@
     - name: 外帶 7
     - name: 外帶 8
     - name: 外帶 9
-    - name: 外帶 10
-    - name: 外帶 11
-    - name: 外帶 12
-    - name: 外帶 13
-    - name: 外帶 14
-    - name: 外帶 15
-    - name: 外帶 16
-    - name: 外帶 17
-    - name: 外帶 18
-    - name: 外帶 19
-    - name: 外帶 20
 
 - model: Category
   records:
@@ -72,28 +61,6 @@
     - name: 燒烤
     - name: 飲品
     - name: 其他
-
-- model: Product
-  records:
-    - name: 綜合生魚片
-      category_id: 1
-      price: 240
-    - name: 肉臊拌麵
-      category_id: 2
-      price: 60
-    - name: 魚皮白菜滷
-      price: 180
-      category_id: 3
-    - name: 炒海瓜子
-      category_id: 4
-      price: 180
-      available: False
-    - name: 皮蛋地瓜葉
-      category_id: 5
-      price: 160
-    - name: 麻油藥膳羊鍋
-      category_id: 6
-      price: 800
 
 
 - model: POS
