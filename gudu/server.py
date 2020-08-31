@@ -78,7 +78,9 @@ def save_pos(staff):
 
     for pos in pos_machs:
         p = POS.query.get(pos['pos_id'])
-        p.ip = pos['ip']
+        if p.ip != pos['ip']:
+            p.error = ''
+            p.ip = pos['ip']
         p.name = pos['pos_name']
         p.split = pos['split']
     db.session.commit()
