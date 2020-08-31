@@ -76,7 +76,7 @@ class Order(db.Model):
     note = db.Column(db.String)
 
     products = association_proxy("order_products", "product")
-    fails = db.relationship('PrintFailed', backref='order')
+    fails = db.relationship('PrintFailed', backref='order', cascade="all,delete")
 
     # 一張單的金額
     @property
@@ -94,7 +94,8 @@ class OrderProduct(db.Model):
     product_price = db.Column(db.Integer, nullable=False)
 
     product = db.relationship(Product, backref="order_products")
-    order = db.relationship(Order, backref="order_products")
+    order = db.relationship(Order, backref=db.backref("order_products",
+        cascade="all,delete"))
 
     @property
     def price(self):

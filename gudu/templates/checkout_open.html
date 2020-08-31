@@ -45,6 +45,26 @@
         let d_id = $(this).attr('data-did');
         window.location.href = "{{ url_for('checkout.checkout_open_page')}}"+d_id;
     });
+
+    $('#logo_row').append('<button type="button" class="btn btn-outline-secondary" id="clear_checkouts">清除已結訂單</button>')
+
+    $(document).on('click', '#clear_checkouts', function(){
+        console.log('ttt')
+        $.ajax({
+            url: '{{ url_for("checkout.checkout_open_page") }}',
+            type: 'DELETE',
+            dataType: "json",
+            processData : false,
+            success: function(res){
+                console.log(res);
+                if(res['state'] == 'ok'){
+                    window.location.href = "{{ url_for('checkout.checkout_open_page')}}";
+                }else{
+                    alert(res['reason']);
+                }
+            }
+        })
+    })
 </script>
 {% endblock content%}
 

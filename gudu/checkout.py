@@ -25,6 +25,25 @@ def checkout_open_page(staff):
     return render_template('checkout_open.html', desks_info=desks_info, staff=staff)
 
 
+@app.route('/', methods=['DELETE'], strict_slashes=False)
+@login_required
+@su_required
+def delete_checkouts(staff):
+    checkouts = Checkout.query.all()
+    try:
+        for c in checkouts:
+            orders = Order.query.filter_by(token=c.token).all()
+            for o in orders:
+                for op in o.order_products:
+                    db.session.delete(op)
+                db.session.delete(o)
+            db.session.delete(c)
+        db.session.commit()
+    except Exception as e:
+        return json_err(e)
+    return {'state': 'ok'}
+
+
 @app.route('/<int:d_id>', strict_slashes=False)
 @login_required
 @su_required
