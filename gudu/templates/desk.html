@@ -31,23 +31,22 @@
                     {% if not desk.is_occupied %}
                         <tr>
                             <th scope="row">{{ desk.name }}</th>
-                            <td>
-                                <button type="button" data-did="{{ desk.id }}" class="btn btn-danger btn-number sit">入桌
+                            <td data-did="{{ desk.id }}">
+                                <button type="button" class="btn btn-danger btn-number sit">入桌
                                 </button>
                             </td>
                         </tr>
                     {% else %}
                         <tr>
                             <th scope="row">{{ desk.name }}</th>
-                            <td>
-                                <button type="button" data-did="{{ desk.id }}"
-                                data-dname="{{ desk.name }}" class="btn btn-outline-secondary order">加點
+                            <td data-did="{{ desk.id }}" data-dname="{{ desk.name }}">
+                                <button type="button" class="btn btn-outline-secondary order">加點
                                 </button>
-                                <button type="button" data-did="{{ desk.id }}"
-                                data-dname="{{ desk.name }}" class="btn btn-outline-secondary check_order">目前已點
+                                <button type="button" class="btn btn-outline-secondary check_order">目前已點
                                 </button>
-                                <button type="button" data-did="{{ desk.id }}"
-                                class="btn btn-outline-secondary leave">退桌
+                                <button type="button" class="btn btn-outline-secondary change_desk">換桌
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary leave">退桌
                                 </button>
                             </td>
                         </tr>
@@ -61,47 +60,72 @@
     </div>
 </div>
 <div class="modal fade" tabindex="-1" role="dialog" id="order_modal">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title row">
+                    <span>桌號:</span>
+                    <span id="d_name"></span>
+                </div>
+
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" tabindex="-1" role="dialog" id="new_desk_modal">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
         <div class="modal-header">
             <div class="modal-title row">
-                <span>桌號:</span>
-                <span id="d_name"></span>
+                <span>換桌</span>
             </div>
 
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
         </div>
-        <div class="modal-body"></div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
-        </div>
-    </div>
-</div>
-<div class="modal fade" tabindex="-1" role="dialog" id="order_modal">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-        <div class="modal-header">
-            <div class="modal-title row">
-                <span>桌號:</span>
-                <span id="d_name"></span>
+        <div class="modal-body">
+            <div class="row">
+                <span>目前桌號：</span>
+                <span id="old_desk_name"></span>
             </div>
-
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
+            <div class="row">
+                <span>新桌號：</span>
+                <select id="new_desk_select">
+                    <option disabled="true" selected="">選擇</option>
+                    {% for data in desks %}
+                        {% for d in data[1] %}
+                    <option data-did="{{d.id}}">{{d.name}}</option>
+                        {% endfor %}
+                    {% endfor %}
+                </select>
+            </div>
         </div>
-        <div class="modal-body"></div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-success">確定</button>
+            <button type="button" class="btn btn-primary" id="change_desk_conf">確定</button>
             <button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
         </div>
     </div>
 </div>
+
+<style type="text/css">
+    .hide{
+        display: none;
+    }
+</style>
+
 <script type="text/javascript">
+    var old_desk_id = null;
     $('.sit').on('click', function(){
-        let d_id = $(this).attr('data-did');
+        let d_id = $(this).parent().attr('data-did');
         $.ajax({
             url: '{{ url_for("index") }}desk/sit/' + d_id,
             type: 'POST',
@@ -112,14 +136,14 @@
     })
 
     $('.order').on('click', function(){
-        let d_id = $(this).attr('data-did');
+        let d_id = $(this).parent().attr('data-did');
         window.location.href = '{{ url_for("order.order") }}/' + d_id;
     })
 
     $('.check_order').on('click', function(){
-        let d_id = parseInt($(this).attr('data-did'));
-        $('.modal-body').empty();
-        $('#d_name').text($(this).attr('data-dname'));
+        let d_id = parseInt($(this).parent().attr('data-did'));
+        $('#order_modal .modal-body').empty();
+        $('#d_name').text($(this).parent().attr('data-dname'));
         $.ajax({
             url: '{{ url_for("order.check_desk_orders") }}',
             type: 'POST',
@@ -129,7 +153,7 @@
             data: JSON.stringify({'d_id': d_id}),
             success: function(res){
                 $.each(res['details'], function(idx, detail){
-                    $('.modal-body').append('<div class="row product-row">\
+                    $('#order_modal .modal-body').append('<div class="row product-row">\
                         <span class="col-6">'+ detail[0] +'</span>\
                         <span class="col-2">x'+ detail[2] +'</span>\
                         <span class="col-4 ">'+ detail[3] +'</span>\
@@ -140,9 +164,8 @@
     })
 
     $('.leave').on('click', function(){
-        let d_id = parseInt($(this).attr('data-did'));
-        $('.modal-body').empty();
-        $('#d_name').text($(this).attr('data-dname'));
+        let d_id = parseInt($(this).parent().attr('data-did'));
+        $('#d_name').text($(this).parent().attr('data-dname'));
         $.ajax({
             url: '{{ url_for("order.check_desk_orders") }}',
             type: 'POST',
@@ -168,6 +191,49 @@
                 }
             }
         })
+    })
+
+    $('.change_desk').on('click', function(){
+        old_desk_id = parseInt($(this).parent().attr('data-did'));
+        $('.hide').removeClass('hide');
+        $('#new_desk_select option[data-did='+old_desk_id+']').addClass('hide');
+        $('#old_desk_name').text($(this).parent().attr('data-dname'));
+        $('#new_desk_modal').modal('show');
+    })
+
+    $('#change_desk_conf').on('click', function(){
+        $('#change_desk_conf').attr('disabled', true);
+        if(old_desk_id != null){
+            let new_desk_id = parseInt($('#new_desk_select option:selected').attr('data-did'));
+
+            if(new_desk_id != NaN){
+                $.ajax({
+                    url: '{{ url_for("change_desk") }}',
+                    type: 'POST',
+                    contentType: "application/json",
+                    dataType: 'json',
+                    processData : false,
+                    data: JSON.stringify({
+                        'old_id': old_desk_id, 'new_id': new_desk_id
+                    }),
+                    success: function(res){
+                        console.log(res);
+                        if(res['state'] == 'ok'){
+                            alert('換桌完成');
+                            location.reload();
+                        }else{
+                            alert(res['reason']);
+                            $('#change_desk_conf').attr('disabled', false);
+                            $('#new_desk_modal').modal('hide');
+                        }
+                    },
+                    error: function(){
+                        $('#change_desk_conf').attr('disabled', false);
+                    }
+                });
+            }
+            
+        }
     })
 
 </script>

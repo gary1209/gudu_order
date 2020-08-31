@@ -10,7 +10,7 @@ from account import app as account_app
 from order import app as order_app
 from checkout import app as checkout_app
 from product import app as product_app
-from utils import login_required, su_required, time_translate
+from utils import login_required, su_required, time_translate, json_err
 from utils import pos_error, save_printer_status, print_order_format, print_bill_format
 from models import Desk, POS, PrintFailed, Checkout, Order
 
@@ -59,6 +59,41 @@ def leave(id, staff):
         abort(403)
     desk.occupied = False
     db.session.commit()
+    return {'state': 'ok'}
+
+
+@app.route('/desk/change', methods=['POST'])
+@login_required
+def change_desk(staff):
+    old_desk_id = request.json['old_id']
+    new_desk_id = request.json['new_id']
+    old_desk = Desk.query.get(old_desk_id)
+    new_desk = Desk.query.get(new_desk_id)
+    if not old_desk:
+        return json_err('舊桌號不存在')
+    if not new_desk:
+        return json_err('此新桌號不存在')
+    if not old_desk.occupied:
+        return json_err('{}桌尚無客人'.format(old_desk.name))
+    if new_desk.occupied:
+        return json_err('{}桌已有客人'.format(new_desk.name))
+    try:
+        token = old_desk.token
+        orders = old_desk.orders
+        old_desk.token = None
+        db.session.flush()
+        new_desk.token = token
+        new_desk.orders = orders
+        db.session.flush()
+        # old_desk.orders = []
+
+        db.session.commit()
+
+        old_desk.occupied = False
+        new_desk.occupied = True
+        db.session.commit()
+    except Exception as e:
+        return json_err(e)
     return {'state': 'ok'}
 
 
