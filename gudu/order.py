@@ -87,12 +87,16 @@ def order(staff):
                 else:
                     error_info[p_id] = op.quantity
     msg = ''
-    for p_id in error_info:
-        info = list(filter(lambda x: x['id'] is p_id, cancel_products))[0]
+    for info in cancel_products:
+        p_id = info['id']
         cancel_num = info['num']
-        num = error_info[p_id]
-        if cancel_num + num < 0:
-            msg = msg + '{}目前共點{}個，不可取消{}個\n'.format(info['name'], num, abs(cancel_num))
+        if p_id in error_info:
+            num = error_info[p_id]
+            if cancel_num + num < 0:
+                msg = msg + '{}目前共點{}個，不可取消{}個\n'.format(info['name'], num, abs(cancel_num))
+        else:
+            msg = msg + '尚未點過{}，不可取消\n'.format(info['name'])
+            
     if len(msg) > 0:
         return json_err(msg)
 
@@ -111,7 +115,7 @@ def order(staff):
         order_product.order = order
         db.session.add(order_product)
         db.session.commit()
-
+     
     order = Order.query.filter_by(staff=staff, desk=desk, token=uuid).first()
     new_loop = asyncio.new_event_loop()
     asyncio.set_event_loop(new_loop)
@@ -145,7 +149,7 @@ def order(staff):
             return {'state': 'printer error', 'reason': msg}
 
         loop.close()
-
+    
     return {'state': 'ok'}
 
 
