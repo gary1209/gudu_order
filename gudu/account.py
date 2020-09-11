@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, session
 from flask import url_for, jsonify, abort
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from config import config
 from models import Staff
