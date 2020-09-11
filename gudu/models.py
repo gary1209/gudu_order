@@ -150,3 +150,10 @@ class PrintFailed(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     pos_id = db.Column(db.Integer, db.ForeignKey('POS.id'))
     order_id = db.Column(db.Integer, db.ForeignKey('Order.id'))
+
+
+class CustomerCount(db.Model):
+    __tablename__ = 'CustomerCount'
+    date = db.Column(db.DateTime, primary_key=True, nullable=False)
+    count = db.Column(db.Integer, default=1)
+

@@ -1,7 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, session
 from sqlalchemy import and_
 from flask import url_for, jsonify, abort
-from uuid import uuid4
 from datetime import datetime, timezone, timedelta
 import requests
 import asyncio
@@ -10,7 +9,8 @@ import xml.etree.ElementTree as ET
 
 
 from config import config
-from models import Order, Desk, Product, Category, OrderProduct, Checkout, POS, PrintFailed
+from models import Order, Desk, Product, Category, CustomerCount
+from models import OrderProduct, Checkout, POS, PrintFailed
 from utils import login_required, su_required, json_err, time_translate
 from utils import pos_error, save_printer_status, print_order_format
 
@@ -66,7 +66,21 @@ def order(staff):
 
     uuid = None
     if not desk.token:
-        uuid = uuid4().hex[:12]
+        now = datetime.utcnow()
+        today = now.strftime("%Y-%m-%d")
+        today_dt = datetime.strptime(today, "%Y-%m-%d")
+        count_record = CustomerCount.query.with_for_update(of=CustomerCount).filter_by(date=today_dt).first()
+        if not count_record:
+            count_record = CustomerCount(date=today_dt)
+            db.session.add(count_record)
+            db.session.commit()
+            uuid = today + '-1'
+        else:
+            count = count_record.count + 1
+            count_record.count = count
+            db.session.commit()
+            uuid = today + '-{}'.format(count)
+
         desk.token = uuid
         desk.occupied = True
         db.session.commit()
