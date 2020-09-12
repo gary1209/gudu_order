@@ -46,7 +46,7 @@
                 <table class="table table-borderless" style="text-align: center;">
                     <tbody>
                 {% for p in data[1] %}
-                        <tr data-pid="{{ p.id }}" data-pname="{{ p.name }}">
+                        <tr data-pid="{{ p.id }}" data-pname="{{ p.name }}" data-pprice="{{ p.price }}">
                     {% if p.available == 1 %}
                             <th scope="row">{{ p.name }}</th>
                             <td>
@@ -60,6 +60,10 @@
                                 <button type="button" class="btn btn-success btn-number" data-type="plus" data-field="quant[{{ p.id }}]">
                                     <span class="fas fa-plus"></span>
                                 </button>
+                            </td>
+                            <td>
+                                <input class="form-check-input free" type="checkbox">
+                                <span>招待</span>
                             </td>
 
                     {% else %}
@@ -76,6 +80,7 @@
                                     <span class="fas fa-plus"></span>
                                 </button>
                             </td>
+                            <td></td>
                             
                     {% endif %}
                         </tr>

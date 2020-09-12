@@ -53,7 +53,8 @@ def order(staff):
     '''
         products: [{
             'id': product.id,
-            'num': quantity
+            'num': quantity,
+            'price': op.product_price
         }, ...]
     '''
     d_id = request.json['d_id']
@@ -110,7 +111,7 @@ def order(staff):
                 msg = msg + '{}目前共點{}個，不可取消{}個\n'.format(info['name'], num, abs(cancel_num))
         else:
             msg = msg + '尚未點過{}，不可取消\n'.format(info['name'])
-            
+
     if len(msg) > 0:
         return json_err(msg)
 
@@ -124,7 +125,7 @@ def order(staff):
         product = Product.query.get(p['id'])
         order_product = OrderProduct(quantity=p['num'],
                                      product_name=product.name,
-                                     product_price=product.price)
+                                     product_price=p['price'])
         order_product.product = product
         order_product.order = order
         db.session.add(order_product)

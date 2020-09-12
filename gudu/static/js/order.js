@@ -65,13 +65,16 @@ $('.input-number').change(function() {
 
     if(valueCurrent != 0){
         let p_name = $(this).parent().parent().attr('data-pname');
-        // let num = parseInt($('input[name="quant['+p_id+']"]').val());
-        added_products[p_id]={'p_name': p_name, 'num': valueCurrent};
+        let p_price = parseInt($(this).parent().parent().attr('data-pprice'));
+        let checkbox = $(this).parent().parent().find('input[type=checkbox]');
+        if(checkbox.prop("checked") == true){
+            p_price = 0;
+        }
+        added_products[p_id]={'p_name': p_name, 'num': valueCurrent, 'price': p_price};
+        
     }else{
         delete added_products[p_id];
     }
-
-    
 });
 
 $(document).on('click', '.remove-product', function(){
@@ -86,13 +89,18 @@ $('#order').on('click', function(){
     if(!table_is_selected()){
         return;
     }
+    if($.isEmptyObject(added_products)){
+        alert('請選商品');
+        return;
+    }
 
     $('.modal-body').empty();
     $('#order_d_name').text($('select').find('option:selected').text());
     $.each(added_products, function(key, value){
         $('.modal-body').append('<div class="row product-row" data-pid="'+ key +'" data-pname="'+ value['p_name'] +'">\
-                <span class="col-8">'+ value['p_name'] +'</span>\
-                <span class="col-2">'+ value['num'] +'</span>\
+                <span class="col-6">'+ value['p_name'] +'</span>\
+                <span class="col-2">x'+ value['num'] +'</span>\
+                <span class="col-2">$'+ value['price'] +'</span>\
                 <div class="btn btn-danger remove-product">x</div>\
             </div>')});
     $('#order_conf').show();
@@ -112,7 +120,11 @@ $('#order_conf').on('click', function(){
     let note = $('#note').val();
     let products = []
     $.each(added_products, function(key, value){
-        products.push({'id': parseInt(key), 'name': value['p_name'], 'num': value['num']})
+        products.push({
+            'id': parseInt(key),
+            'name': value['p_name'],
+            'num': value['num'],
+            'price': value['price']})
     });
 
     $.ajax({
@@ -175,4 +187,14 @@ $('#add_spice').on('click', function(){
 
 $('#no_spice').on('click', function(){
     $('#note').val($('#note').val()+'不辣');
+})
+
+$('.free').on('change', function(){
+    let p_id = parseInt($(this).parent().parent().attr('data-pid'));
+    if($(this).prop("checked") == true){
+        added_products[p_id]['price'] = 0;
+    }else{
+        added_products[p_id]['price'] = parseInt($(this).parent().parent().attr('data-pprice'));
+    }
+    
 })
