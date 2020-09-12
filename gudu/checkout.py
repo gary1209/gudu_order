@@ -170,6 +170,21 @@ def print_bill(pos, checkout, checkout_info, check_price):
         'SOAPAction': '""'}
     try:
         res = requests.post(url, data=data.encode(), headers=headers)
+        if res.status_code is 200:
+            tree = ET.fromstring(res.content)
+            success = tree[0][0].get('success')
+            if success is not 'false':
+                status = tree[0][0].get('status')
+                if not int(status) & 2:
+                    config.checkout_pos_working = False
+                    checkout.printed = False
+                    pos.error = pos_error(status)
+                else:
+                    config.checkout_pos_working = True
+                    pos.error = ""
+                save_printer_status(dict(checkout_pos_working=config.checkout_pos_working, 
+                    order_pos_working=config.order_pos_working))
+            db.session.commit()
     except (Exception, OSError) as e:
         config.checkout_pos_working = False
         save_printer_status(dict(checkout_pos_working=config.checkout_pos_working, 
@@ -177,18 +192,4 @@ def print_bill(pos, checkout, checkout_info, check_price):
         pos.error = str(e)
         db.session.commit()
 
-    if res.status_code is 200:
-        tree = ET.fromstring(res.content)
-        success = tree[0][0].get('success')
-        if success is not 'false':
-            status = tree[0][0].get('status')
-            if not int(status) & 2:
-                config.checkout_pos_working = False
-                checkout.printed = False
-                pos.error = pos_error(status)
-            else:
-                config.checkout_pos_working = True
-                pos.error = ""
-            save_printer_status(dict(checkout_pos_working=config.checkout_pos_working, 
-                order_pos_working=config.order_pos_working))
-        db.session.commit()
+

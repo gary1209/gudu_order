@@ -178,23 +178,24 @@ async def send_req(order, pos, data):
     loop = asyncio.get_event_loop()
     try:
         res = await loop.run_in_executor(None, f)
+        if res.status_code is 200:
+            tree = ET.fromstring(res.content)
+            success = tree[0][0].get('success')
+            if success is not 'false':
+                status = tree[0][0].get('status')
+                if not int(status) & 2:
+                    pos.error = pos_error(status)
+                    fail = PrintFailed()
+                    fail.order = order
+                    fail.pos = pos
+                    db.session.add(fail)
+                else:
+                    pos.error = ""
+            db.session.commit()
     except (Exception, OSError) as e:
         pos.error = str(e)
         db.session.commit()
-    if res.status_code is 200:
-        tree = ET.fromstring(res.content)
-        success = tree[0][0].get('success')
-        if success is not 'false':
-            status = tree[0][0].get('status')
-            if not int(status) & 2:
-                pos.error = pos_error(status)
-                fail = PrintFailed()
-                fail.order = order
-                fail.pos = pos
-                db.session.add(fail)
-            else:
-                pos.error = ""
-        db.session.commit()
+
 
 
 @app.route('/check', methods=['POST'], strict_slashes=False)
