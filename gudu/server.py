@@ -196,6 +196,21 @@ def fix_pos_error(staff):
     return {'state': 'ok'}
 
 
+@app.route('/pos/clear', methods=['POST'])
+@login_required
+def clear_pos_error(staff):
+    pos_machs = POS.query.all()
+    for pos in pos_machs:
+        pos.error = ''
+        db.session.commit()
+    config.order_pos_working = True
+    config.checkout_pos_working = True
+    save_printer_status({'order_pos_working': True,
+                    'checkout_pos_working': True
+                })
+    return {'state': 'ok'}
+
+
 async def send_req(pos, data=None, order=None, checkout=None):
     ip = pos.ip
     url = 'http://' + ip + '/cgi-bin/epos/service.cgi?devid=local_printer&timeout=30000'

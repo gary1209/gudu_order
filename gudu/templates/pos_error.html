@@ -26,6 +26,7 @@
                     <tr>
                         <td colspan="4">
                             <button type="button" class="btn btn-outline-secondary" id="fix">修復</button>
+                            <button type="button" class="btn btn-outline-secondary" id="clear">清空</button>
                         </td>
                     </tr>
                 </tfoot>
@@ -41,6 +42,22 @@
         $('#fix').attr('disabled', true);
         $.ajax({
             url: '{{ url_for("error_page") }}',
+            type: 'POST',
+            contentType: "application/json",
+            success: function(res){
+                if(res.state != 'ok'){
+                    location.reload()
+                }else{
+                    window.location.href = '{{ url_for("index") }}'
+                }
+            }
+        })
+    })
+
+    $('#clear').on('click', function(){
+        $('#clear').attr('disabled', true);
+        $.ajax({
+            url: '{{ url_for("pos_page") }}/clear',
             type: 'POST',
             contentType: "application/json",
             success: function(res){
