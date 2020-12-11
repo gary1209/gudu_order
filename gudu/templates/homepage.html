@@ -4,7 +4,7 @@
 <div class="flex" style="height:100%;">
     <div>
         <div style="margin-bottom: 30px;">
-            <img src="{{url_for('static', filename='img/logo.png')}}" style="width: 100%;">
+            <img src="{{url_for('static', filename='img/newyear.png')}}" style="width: 100%;">
         </div>
         <span class="flex-item">{{ staff.name }}你好</span>
         <div class="border border-dark rounded">
@@ -15,6 +15,7 @@
             <div class="align-center"><a href="{{ url_for('product.mgmt_page')}}">商品管理</a></div>
             <div class="align-center"><a href="{{ url_for('account.list_page')}}">人員管理</a></div>
             <div class="align-center"><a href="{{ url_for('checkout.checkout_open_page')}}">結帳</a></div>
+            <div class="align-center"><a href="{{ url_for('stat_page')}}">統計表</a></div>
             <div class="align-center"><a href="{{ url_for('pos_page')}}">POS機設定</a></div>
             {% endif %}
             <div class="align-center"><a href="" class="logout">登出</a></div>

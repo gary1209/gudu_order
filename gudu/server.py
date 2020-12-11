@@ -12,7 +12,7 @@ from checkout import app as checkout_app
 from product import app as product_app
 from utils import login_required, su_required, time_translate, json_err
 from utils import pos_error, save_printer_status, print_order_format, print_bill_format
-from models import Desk, POS, PrintFailed, Checkout, Order
+from models import Desk, POS, PrintFailed, Checkout, Order, OrderProduct
 
 app = Flask(__name__)
 app.register_blueprint(account_app, url_prefix='/account')
@@ -95,6 +95,22 @@ def change_desk(staff):
     except Exception as e:
         return json_err(e)
     return {'state': 'ok'}
+
+@app.route('/stat')
+@login_required
+@su_required
+def stat_page(staff):
+    op = OrderProduct.query.all()
+    D = {}
+    for i in op:
+        if i.product_name in D:
+            D[i.product_name] += i.quantity
+        else:
+            D[i.product_name] = i.quantity
+
+    print(D)
+    return render_template('stat.html', op=op, staff=staff, D = D)
+
 
 
 @app.route('/pos')
