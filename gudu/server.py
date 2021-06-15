@@ -33,7 +33,7 @@ def index(staff):
 @login_required
 def desk_page(staff):
     desks = {}
-    prefix = ['0', '1', '2', '3', '5', '6', '外']
+    prefix = ['0', '1', '2', '3', '4', 'A', '外']
     for p in prefix:
         d = Desk.query.filter(Desk.name.startswith(p)).all()
         desks[p] = d

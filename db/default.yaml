@@ -8,35 +8,39 @@
     - name: '07'
     - name: '08'
     - name: '09'
-    - name: 10
     - name: 11
     - name: 12
     - name: 13
+    - name: 14
+    - name: 15
+    - name: 16
+    - name: 17
     - name: 21
     - name: 22
     - name: 23
+    - name: 24
     - name: 25
     - name: 26
-    - name: 27
-    - name: 28
-    - name: 29
     - name: 31
     - name: 32
     - name: 33
+    - name: 34
     - name: 35
     - name: 36
-    - name: 37
-    - name: 38
-    - name: 51
-    - name: 52
-    - name: 53
-    - name: 55
-    - name: 56
-    - name: 57
-    - name: 58
-    - name: 59
-    - name: 60
-    - name: 61
+    - name: 41
+    - name: 42
+    - name: 43
+    - name: 44
+    - name: 45
+    - name: 46
+    - name: A02
+    - name: A03
+    - name: A03-1
+    - name: A05
+    - name: A05-1
+    - name: A06
+    - name: A06-1
+    - name: A07
     - name: 外帶 1
     - name: 外帶 2
     - name: 外帶 3
@@ -46,7 +50,18 @@
     - name: 外帶 7
     - name: 外帶 8
     - name: 外帶 9
-
+    - name: 外帶 10
+    - name: 外帶 11
+    - name: 外帶 12
+    - name: 外帶 13
+    - name: 外帶 14
+    - name: 外帶 15
+    - name: 外帶 16
+    - name: 外帶 17
+    - name: 外帶 18
+    - name: 外帶 19
+    - name: 外帶 20
+    
 - model: Category
   records:
     - name: 冷盤
